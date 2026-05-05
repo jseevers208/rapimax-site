@@ -1,0 +1,24 @@
+{
+  "entry": [
+    "index.html",
+    "calculadora/index.html",
+    "contactanos/index.html",
+    "requisitos/index.html",
+    "servicios/index.html",
+    "solicitud/index.html",
+    "src/lib/components/WhosRapimax.svelte",
+    "src/lib/components/FinancingOptions.svelte",
+    "src/lib/components/HowItWorks.svelte",
+    "src/lib/components/WhyRapiMax.svelte",
+    "src/lib/components/Partners.svelte",
+    "src/lib/components/PartnerMap.svelte"
+  ],
+  "project": [
+    "src/**/*.{js,svelte}"
+  ],
+  "ignoreDependencies": [
+    "@maplibre/maplibre-gl-leaflet",
+    "leaflet",
+    "maplibre-gl"
+  ]
+}
