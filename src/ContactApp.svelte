@@ -9,6 +9,40 @@
   const SERVICE_HOURS_LABEL = 'Lunes a Viernes · 8:00 a. m. - 6:00 p. m.';
   const WHATSAPP_URL = 'https://wa.me/50600000000?text=Hola%20RapiMax%2C%20necesito%20ayuda%20con%20mi%20financiamiento.';
 
+  let contactForm = { name: '', lastName: '', idNumber: '', email: '', cellphone: '', comment: '' };
+  let contactSubmitting = false;
+  let contactSuccess = false;
+  let contactError = '';
+
+  const handleContactSubmit = async () => {
+    if (!contactForm.name || !contactForm.comment) return;
+    contactSubmitting = true;
+    contactError = '';
+    try {
+      const response = await fetch('/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          fullName: `${contactForm.name} ${contactForm.lastName}`.trim(),
+          email: contactForm.email || null,
+          phone: contactForm.cellphone || null,
+          subject: contactForm.idNumber ? `Cédula: ${contactForm.idNumber}` : null,
+          message: contactForm.comment,
+        }),
+      });
+      const result = await response.json();
+      if (result.success) {
+        contactSuccess = true;
+      } else {
+        contactError = result.error || 'Error al enviar.';
+      }
+    } catch {
+      contactError = 'Error de conexión. Intentá de nuevo.';
+    } finally {
+      contactSubmitting = false;
+    }
+  };
+
   const contactMethods = [
     {
       id: 'whatsapp',
@@ -177,40 +211,51 @@
           <p>Complet&aacute; el formulario y un asesor podr&aacute; revisar tu consulta.</p>
         </div>
 
-        <form class="contact-form" aria-label="Formulario de contacto" on:submit|preventDefault>
+        <form class="contact-form" aria-label="Formulario de contacto" on:submit|preventDefault={handleContactSubmit}>
+          {#if contactSuccess}
+            <div class="contact-form__success">
+              <p>¡Mensaje enviado! Un asesor te contactará pronto.</p>
+            </div>
+          {:else}
           <div class="contact-form__grid">
             <label class="contact-form__field">
               <span>Nombre</span>
-              <input type="text" name="name" autocomplete="given-name" />
+              <input type="text" name="name" autocomplete="given-name" bind:value={contactForm.name} required />
             </label>
 
             <label class="contact-form__field">
               <span>Apellido</span>
-              <input type="text" name="last-name" autocomplete="family-name" />
+              <input type="text" name="last-name" autocomplete="family-name" bind:value={contactForm.lastName} />
             </label>
 
             <label class="contact-form__field">
               <span>N&uacute;mero de c&eacute;dula</span>
-              <input type="text" name="id-number" autocomplete="off" />
+              <input type="text" name="id-number" autocomplete="off" bind:value={contactForm.idNumber} />
             </label>
 
             <label class="contact-form__field">
               <span>Correo electr&oacute;nico</span>
-              <input type="email" name="email" autocomplete="email" />
+              <input type="email" name="email" autocomplete="email" bind:value={contactForm.email} />
             </label>
 
             <label class="contact-form__field">
               <span>N&uacute;mero de celular</span>
-              <input type="tel" name="cellphone" autocomplete="tel" />
+              <input type="tel" name="cellphone" autocomplete="tel" bind:value={contactForm.cellphone} />
             </label>
 
             <label class="contact-form__field contact-form__field--full">
               <span>Comentario</span>
-              <textarea name="comment" rows="4"></textarea>
+              <textarea name="comment" rows="4" bind:value={contactForm.comment} required></textarea>
             </label>
           </div>
 
-          <button type="submit" class="contact-form__submit">Enviar</button>
+          {#if contactError}
+            <p class="contact-form__error" style="color:#c44; margin-bottom:12px; font-size:0.85rem;">{contactError}</p>
+          {/if}
+          <button type="submit" class="contact-form__submit" disabled={contactSubmitting}>
+            {contactSubmitting ? 'Enviando...' : 'Enviar'}
+          </button>
+          {/if}
         </form>
       </header>
 

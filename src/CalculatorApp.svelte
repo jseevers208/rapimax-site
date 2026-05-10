@@ -204,6 +204,32 @@
     if (!isCurrentStepValid()) return;
 
     yearMenuOpen = false;
+
+    // If this is the email step (last before results), submit lead data
+    if (currentStepIndex === CALCULATOR_STEPS.length - 1) {
+      const quote = calculateQuote({
+        vehicleValue: answers.vehicleValue,
+        downPayment: answers.downPayment,
+        termMonths: answers.termMonths,
+      });
+      fetch('/api/calculator-lead', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: answers.email,
+          vehicleType: answers.vehicleType,
+          vehicleUse: answers.vehicleUse,
+          currency: answers.currency,
+          vehicleValue: parseFloat(answers.vehicleValue) || 0,
+          vehicleYear: parseInt(answers.year) || 0,
+          downPayment: parseFloat(answers.downPayment) || 0,
+          termMonths: parseInt(answers.termMonths) || 0,
+          monthlyPayment: quote.monthlyPayment,
+          annualRate: quote.annualRate,
+        }),
+      }).catch(() => {});
+    }
+
     currentStepIndex += 1;
     attemptedAdvance = false;
   };

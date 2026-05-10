@@ -8,6 +8,7 @@ const applicationEntry = fileURLToPath(new URL('./solicitud/index.html', import.
 const requirementsEntry = fileURLToPath(new URL('./requisitos/index.html', import.meta.url));
 const servicesEntry = fileURLToPath(new URL('./servicios/index.html', import.meta.url));
 const contactEntry = fileURLToPath(new URL('./contactanos/index.html', import.meta.url));
+const adminEntry = fileURLToPath(new URL('./admin/index.html', import.meta.url));
 
 export default defineConfig({
   plugins: [svelte()],
@@ -20,7 +21,8 @@ export default defineConfig({
         solicitud: applicationEntry,
         requisitos: requirementsEntry,
         servicios: servicesEntry,
-        contactanos: contactEntry
+        contactanos: contactEntry,
+        admin: adminEntry
       }
     }
   },

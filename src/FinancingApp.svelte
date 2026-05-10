@@ -198,13 +198,34 @@
       .filter(([, error]) => Boolean(error))
   );
 
-  const handleAdvance = () => {
+  let isSubmitting = false;
+  let submitError = '';
+
+  const handleAdvance = async () => {
     attemptedAdvance = true;
     const errors = getStepErrors(currentStepId);
     if (Object.keys(errors).length) return;
     if (currentStepIndex === activeStepIds.length - 1) {
-      showSuccess = true;
-      attemptedAdvance = false;
+      isSubmitting = true;
+      submitError = '';
+      try {
+        const response = await fetch('/api/solicitud', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(answers),
+        });
+        const result = await response.json();
+        if (result.success) {
+          showSuccess = true;
+        } else {
+          submitError = result.error || 'Error al enviar la solicitud.';
+        }
+      } catch (err) {
+        submitError = 'Error de conexión. Intentá de nuevo.';
+      } finally {
+        isSubmitting = false;
+        attemptedAdvance = false;
+      }
       return;
     }
     currentStepIndex += 1;
@@ -357,17 +378,24 @@
               </div>
 
               <div class="application-card__actions">
+                {#if submitError}
+                  <p class="application-card__error">{submitError}</p>
+                {/if}
                 {#if currentStepIndex === 0}
-                  <button type="button" class="btn ghost application-card__secondary" on:click={resetForm} disabled={!hasAnyAnswer()}>
+                  <button type="button" class="btn ghost application-card__secondary" on:click={resetForm} disabled={!hasAnyAnswer() || isSubmitting}>
                     Borrar
                   </button>
                 {:else}
-                  <button type="button" class="btn ghost application-card__secondary" on:click={handleBack}>
+                  <button type="button" class="btn ghost application-card__secondary" on:click={handleBack} disabled={isSubmitting}>
                     Atrás
                   </button>
                 {/if}
-                <button type="submit" class="btn primary application-card__primary">
-                  {currentStepIndex === activeStepIds.length - 1 ? 'Enviar' : 'Siguiente'}
+                <button type="submit" class="btn primary application-card__primary" disabled={isSubmitting}>
+                  {#if isSubmitting}
+                    Enviando...
+                  {:else}
+                    {currentStepIndex === activeStepIds.length - 1 ? 'Enviar' : 'Siguiente'}
+                  {/if}
                 </button>
               </div>
             </form>
