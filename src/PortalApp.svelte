@@ -29,7 +29,7 @@
   }
 
   if (token) loadStatus();
-  else loading = false;
+  else { error = 'no-token'; loading = false; }
 </script>
 
 <div class="portal">
