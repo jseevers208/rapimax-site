@@ -200,6 +200,7 @@
 
   let isSubmitting = false;
   let submitError = '';
+  let portalUrl = '';
 
   const handleAdvance = async () => {
     attemptedAdvance = true;
@@ -216,6 +217,7 @@
         });
         const result = await response.json();
         if (result.success) {
+          portalUrl = result.portalUrl || '';
           showSuccess = true;
         } else {
           submitError = result.error || 'Error al enviar la solicitud.';
@@ -404,10 +406,10 @@
               <div class="application-card__top">
                 <div>
                   <p class="application-card__step-label">Solicitud completada</p>
-                  <h2>Tu formulario quedó listo</h2>
+                  <h2>¡Tu solicitud fue enviada!</h2>
                 </div>
                 <p class="application-card__description">
-                  Gracias, {answers.applicantFullName}. Esta versión valida y organiza la solicitud en el navegador, pero todavía no envía la información a un backend o CRM.
+                  Gracias, {answers.applicantFullName}. Recibimos tu solicitud de financiamiento. Un asesor la revisará y te contactará pronto.
                 </p>
               </div>
 
@@ -425,7 +427,10 @@
               </div>
 
               <div class="result-actions">
-                <button type="button" class="btn primary" on:click={resetForm}>Nueva solicitud</button>
+                {#if portalUrl}
+                  <a href={portalUrl} class="btn primary" style="text-decoration:none; text-align:center; display:inline-block;">Ver estado de mi solicitud</a>
+                {/if}
+                <button type="button" class="btn primary" on:click={resetForm} style={portalUrl ? 'background:transparent; border:1px solid rgba(255,246,226,.3); color:var(--c-cream,#e8e4dc);' : ''}>Nueva solicitud</button>
               </div>
             </div>
           {/if}

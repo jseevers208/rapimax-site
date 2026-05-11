@@ -12,15 +12,29 @@
 
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     errorMessage = '';
     if (!emailRegex.test(email)) {
       errorMessage = 'Por favor ingresá un correo electrónico válido.';
       return;
     }
-    submitted = true;
-    setTimeout(handleClose, 2000);
+    try {
+      const res = await fetch('/api/waitlist', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email.trim() }),
+      });
+      const result = await res.json();
+      if (result.success) {
+        submitted = true;
+        setTimeout(handleClose, 2400);
+      } else {
+        errorMessage = result.error || 'Error al registrar.';
+      }
+    } catch {
+      errorMessage = 'Error de conexión. Intentá de nuevo.';
+    }
   };
 
   const handleClose = () => {

@@ -540,7 +540,7 @@
             <a
               class="auth-btn"
               class:highlighted={authActive === 'login'}
-              href="#login"
+              href="/ingresar"
               bind:this={loginRef}
               on:pointerenter={(event) => handleAuthHover('login', event)}
               on:pointermove={(event) => handleAuthPointerMove('login', event)}

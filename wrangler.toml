@@ -11,3 +11,10 @@ binding = "ASSETS"
 binding = "DB"
 database_name = "rapimax-prod"
 database_id = "80d06894-83c2-4d45-afe7-1f1b1889cf7b"
+
+# Cron Triggers — email report digests
+[triggers]
+crons = [
+  "0 12 * * *",   # Daily digest at 12:00 UTC (6:00 AM CST)
+  "0 13 * * 1"    # Weekly digest Monday at 13:00 UTC (7:00 AM CST)
+]

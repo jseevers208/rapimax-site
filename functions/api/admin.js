@@ -1,4 +1,5 @@
 import { corsResponse, handleOptions, errorResponse, checkAdminAuth, rowToCamel } from './_helpers.js';
+import { notifyStatusChange } from './_whatsapp.js';
 
 export async function onRequestOptions() { return handleOptions(); }
 
@@ -6,7 +7,7 @@ const TABLE_MAP = { applications: 'loan_applications', contacts: 'contact_messag
 const STATUS_LIST = ['nueva', 'en-proceso', 'contactada', 'documentos', 'en-revision', 'aprobada', 'rechazada', 'desembolsada', 'completada'];
 
 export async function onRequest(context) {
-  const { request, env } = context;
+  const { request, env, ctx } = context;
   if (request.method === 'OPTIONS') return handleOptions();
 
   // --- LOGIN ---
@@ -40,6 +41,8 @@ export async function onRequest(context) {
       const current = await env.DB.prepare(`SELECT status FROM ${table} WHERE id = ?`).bind(body.id).first();
       await env.DB.prepare(`UPDATE ${table} SET status = ?, updated_at = datetime('now') WHERE id = ?`).bind(body.status, body.id).run();
       await logActivity(env.DB, body.type, body.id, 'status_changed', current?.status, body.status, body.actor || 'Admin');
+      // WhatsApp notification (non-blocking)
+      ctx.waitUntil(notifyStatusChange(env, env.DB, body.type, body.id, body.status));
       return corsResponse({ success: true });
     }
 

@@ -1,11 +1,12 @@
 import { corsResponse, handleOptions, errorResponse, checkAdminAuth, rowToCamel } from './_helpers.js';
+import { sendStatusWhatsApp } from './_whatsapp.js';
 
 export async function onRequestOptions() { return handleOptions(); }
 
 const CASE_STATUSES = ['lead', 'contactado', 'en-proceso', 'documentos', 'en-revision', 'aprobado', 'rechazado', 'desembolsado', 'cerrado'];
 
 export async function onRequest(context) {
-  const { request, env } = context;
+  const { request, env, ctx } = context;
   if (request.method === 'OPTIONS') return handleOptions();
   if (!checkAdminAuth(request, env)) return errorResponse('No autorizado.', 401);
 
@@ -224,9 +225,13 @@ export async function onRequest(context) {
     // Quick status change (for kanban drag)
     if (body.action === 'move') {
       if (!body.id || !body.status) return errorResponse('Datos requeridos.');
-      const old = await env.DB.prepare('SELECT status FROM cases WHERE id = ?').bind(body.id).first();
+      const old = await env.DB.prepare('SELECT status, phone, full_name FROM cases WHERE id = ?').bind(body.id).first();
       await env.DB.prepare("UPDATE cases SET status = ?, updated_at = datetime('now') WHERE id = ?").bind(body.status, body.id).run();
       await logCaseActivity(env.DB, body.id, 'status_changed', old?.status, body.status, body.actor || 'Admin');
+      // WhatsApp notification for case status change (non-blocking)
+      if (old?.phone) {
+        ctx.waitUntil(sendStatusWhatsApp(env, old.phone, body.status, old.full_name));
+      }
       return corsResponse({ success: true });
     }
 

@@ -11,6 +11,9 @@ import * as adminHandler from './api/admin.js';
 import * as contentHandler from './api/content.js';
 import * as casesHandler from './api/cases.js';
 import * as portalHandler from './api/portal.js';
+import * as waitlistHandler from './api/waitlist.js';
+import * as lookupHandler from './api/lookup.js';
+import { sendDailyDigest, sendWeeklyDigest } from './api/_scheduled.js';
 
 export default {
   async fetch(request, env, ctx) {
@@ -55,6 +58,14 @@ export default {
         return await portalHandler.onRequestGet(context);
       }
 
+      if (path === '/api/waitlist' && method === 'POST') {
+        return await waitlistHandler.onRequestPost(context);
+      }
+
+      if (path === '/api/lookup' && method === 'POST') {
+        return await lookupHandler.onRequestPost(context);
+      }
+
       // Unknown API route
       if (path.startsWith('/api/')) {
         return errorResponse('Ruta no encontrada.', 404);
@@ -66,6 +77,22 @@ export default {
     } catch (err) {
       console.error('Worker error:', err);
       return errorResponse('Error interno del servidor.', 500);
+    }
+  },
+
+  // Cron Triggers — daily at 6am CST, weekly Monday at 7am CST
+  async scheduled(event, env, ctx) {
+    const trigger = event.cron;
+    try {
+      if (trigger === '0 12 * * *') {
+        // Daily digest at 12:00 UTC = 6:00 AM CST
+        await sendDailyDigest(env);
+      } else if (trigger === '0 13 * * 1') {
+        // Weekly digest Monday at 13:00 UTC = 7:00 AM CST
+        await sendWeeklyDigest(env);
+      }
+    } catch (err) {
+      console.error('Scheduled task error:', err);
     }
   },
 };

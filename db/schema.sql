@@ -72,7 +72,8 @@ CREATE TABLE IF NOT EXISTS loan_applications (
   reference2_relationship TEXT,
 
   ip_address TEXT,
-  user_agent TEXT
+  user_agent TEXT,
+  access_token TEXT
 );
 
 -- ============================================
@@ -100,6 +101,8 @@ CREATE TABLE IF NOT EXISTS calculator_leads (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   created_at TEXT DEFAULT (datetime('now')),
   email TEXT,
+  full_name TEXT,
+  phone TEXT,
   vehicle_type TEXT,
   vehicle_use TEXT,
   currency TEXT,
@@ -183,11 +186,24 @@ CREATE TABLE IF NOT EXISTS partner_locations (
 );
 
 -- ============================================
+-- Waitlist Subscribers
+-- ============================================
+CREATE TABLE IF NOT EXISTS waitlist_subscribers (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  created_at TEXT DEFAULT (datetime('now')),
+  email TEXT NOT NULL UNIQUE,
+  ip_address TEXT,
+  user_agent TEXT,
+  converted INTEGER DEFAULT 0
+);
+
+-- ============================================
 -- INDEXES
 -- ============================================
 CREATE INDEX IF NOT EXISTS idx_applications_status ON loan_applications(status);
 CREATE INDEX IF NOT EXISTS idx_applications_created ON loan_applications(created_at);
 CREATE INDEX IF NOT EXISTS idx_applications_priority ON loan_applications(priority);
+CREATE INDEX IF NOT EXISTS idx_applications_token ON loan_applications(access_token);
 CREATE INDEX IF NOT EXISTS idx_contacts_status ON contact_messages(status);
 CREATE INDEX IF NOT EXISTS idx_leads_created ON calculator_leads(created_at);
 CREATE INDEX IF NOT EXISTS idx_notes_record ON notes(record_type, record_id);
@@ -195,6 +211,7 @@ CREATE INDEX IF NOT EXISTS idx_activity_record ON activity_log(record_type, reco
 CREATE INDEX IF NOT EXISTS idx_content_page ON site_content(page, section);
 CREATE INDEX IF NOT EXISTS idx_settings_key ON site_settings(setting_key);
 CREATE INDEX IF NOT EXISTS idx_partners_active ON partner_locations(is_active);
+CREATE INDEX IF NOT EXISTS idx_waitlist_email ON waitlist_subscribers(email);
 
 -- ============================================
 -- SEED: Default site settings
