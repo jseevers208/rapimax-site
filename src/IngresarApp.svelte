@@ -1,4 +1,40 @@
 <script>
+  const translations = {
+    es: {
+      title: 'Consultá tu solicitud',
+      desc: 'Ingresá tu correo electrónico o número de cédula para ver el estado de tu solicitud de financiamiento.',
+      placeholder: 'Correo electrónico o cédula',
+      search: 'Buscar mi solicitud',
+      searching: 'Buscando...',
+      minChars: 'Ingresá tu correo electrónico o número de cédula.',
+      hello: '¡Hola,',
+      currentStatus: 'Estado actual:',
+      viewApp: 'Ver mi solicitud →',
+      noApp: '¿No tenés solicitud? Solicitá tu financiamiento',
+      goHome: 'Volver al inicio',
+      langToggle: 'English',
+    },
+    en: {
+      title: 'Check your application',
+      desc: 'Enter your email address or ID number to view the status of your financing application.',
+      placeholder: 'Email or ID number',
+      search: 'Find my application',
+      searching: 'Searching...',
+      minChars: 'Enter your email address or ID number.',
+      hello: 'Hello,',
+      currentStatus: 'Current status:',
+      viewApp: 'View my application →',
+      noApp: "Don't have an application? Apply for financing",
+      goHome: 'Back to home',
+      langToggle: 'Español',
+    },
+  };
+
+  let lang = 'es';
+  $: t = translations[lang];
+
+  function toggleLang() { lang = lang === 'es' ? 'en' : 'es'; }
+
   let query = '';
   let loading = false;
   let error = '';
@@ -10,7 +46,7 @@
     result = null;
     const trimmed = query.trim();
     if (!trimmed || trimmed.length < 3) {
-      error = 'Ingresá tu correo electrónico o número de cédula.';
+      error = t.minChars;
       return;
     }
     loading = true;
@@ -38,18 +74,19 @@
     <a href="/" class="ingresar__brand">
       <span class="ingresar__logo">RM</span> RapiMax
     </a>
+    <button class="ingresar__lang" on:click={toggleLang}>{t.langToggle}</button>
   </header>
 
   <main class="ingresar__main">
     <div class="ingresar__card">
       <div class="ingresar__icon">🔐</div>
-      <h1>Consultá tu solicitud</h1>
-      <p class="ingresar__desc">Ingresá tu correo electrónico o número de cédula para ver el estado de tu solicitud de financiamiento.</p>
+      <h1>{t.title}</h1>
+      <p class="ingresar__desc">{t.desc}</p>
 
       <form on:submit={handleSubmit} class="ingresar__form">
         <input
           type="text"
-          placeholder="Correo electrónico o cédula"
+          placeholder={t.placeholder}
           bind:value={query}
           class="ingresar__input"
           autocomplete="off"
@@ -59,22 +96,22 @@
           <p class="ingresar__error">{error}</p>
         {/if}
         <button type="submit" class="ingresar__btn" disabled={loading}>
-          {loading ? 'Buscando...' : 'Buscar mi solicitud'}
+          {loading ? t.searching : t.search}
         </button>
       </form>
 
       {#if result}
         <div class="ingresar__result">
           <div class="ingresar__result-icon">✅</div>
-          <p class="ingresar__result-name">¡Hola, {result.name}!</p>
-          <p class="ingresar__result-status">Estado actual: <strong>{result.status}</strong></p>
-          <a href={result.portalUrl} class="ingresar__result-btn">Ver mi solicitud →</a>
+          <p class="ingresar__result-name">{t.hello} {result.name}!</p>
+          <p class="ingresar__result-status">{t.currentStatus} <strong>{result.status}</strong></p>
+          <a href={result.portalUrl} class="ingresar__result-btn">{t.viewApp}</a>
         </div>
       {/if}
 
       <div class="ingresar__footer-links">
-        <a href="/solicitud">¿No tenés solicitud? Solicitá tu financiamiento</a>
-        <a href="/">Volver al inicio</a>
+        <a href="/solicitud">{t.noApp}</a>
+        <a href="/">{t.goHome}</a>
       </div>
     </div>
   </main>
@@ -85,9 +122,11 @@
 
   .ingresar { min-height:100vh; }
 
-  .ingresar__header { padding:16px 24px; display:flex; align-items:center; border-bottom:1px solid rgba(255,255,255,.06); }
+  .ingresar__header { padding:16px 24px; display:flex; align-items:center; border-bottom:1px solid rgba(255,255,255,.06); justify-content:space-between; }
   .ingresar__brand { text-decoration:none; color:#d5b584; font-size:1.1rem; font-weight:700; display:flex; align-items:center; gap:8px; }
   .ingresar__logo { font-family:'Nordique Pro',sans-serif; font-size:.85rem; border:1.5px solid #d5b584; border-radius:6px; padding:2px 6px; font-weight:700; }
+  .ingresar__lang { background:none; border:1px solid rgba(255,246,226,.15); color:rgba(255,246,226,.5); padding:6px 14px; border-radius:8px; font-size:.78rem; cursor:pointer; transition:all .2s; }
+  .ingresar__lang:hover { border-color:rgba(255,246,226,.3); color:#d5b584; }
 
   .ingresar__main { max-width:480px; margin:0 auto; padding:48px 20px 60px; }
 

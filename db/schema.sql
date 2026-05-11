@@ -198,6 +198,20 @@ CREATE TABLE IF NOT EXISTS waitlist_subscribers (
 );
 
 -- ============================================
+-- Documents (R2 file tracking)
+-- ============================================
+CREATE TABLE IF NOT EXISTS documents (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  created_at TEXT DEFAULT (datetime('now')),
+  application_id INTEGER NOT NULL,
+  filename TEXT NOT NULL,
+  r2_key TEXT NOT NULL UNIQUE,
+  content_type TEXT,
+  file_size INTEGER,
+  uploaded_by TEXT DEFAULT 'customer'
+);
+
+-- ============================================
 -- INDEXES
 -- ============================================
 CREATE INDEX IF NOT EXISTS idx_applications_status ON loan_applications(status);
@@ -212,6 +226,7 @@ CREATE INDEX IF NOT EXISTS idx_content_page ON site_content(page, section);
 CREATE INDEX IF NOT EXISTS idx_settings_key ON site_settings(setting_key);
 CREATE INDEX IF NOT EXISTS idx_partners_active ON partner_locations(is_active);
 CREATE INDEX IF NOT EXISTS idx_waitlist_email ON waitlist_subscribers(email);
+CREATE INDEX IF NOT EXISTS idx_documents_app ON documents(application_id);
 
 -- ============================================
 -- SEED: Default site settings

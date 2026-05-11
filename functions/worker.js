@@ -13,6 +13,7 @@ import * as casesHandler from './api/cases.js';
 import * as portalHandler from './api/portal.js';
 import * as waitlistHandler from './api/waitlist.js';
 import * as lookupHandler from './api/lookup.js';
+import * as filesHandler from './api/files.js';
 import { sendDailyDigest, sendWeeklyDigest } from './api/_scheduled.js';
 
 export default {
@@ -64,6 +65,10 @@ export default {
 
       if (path === '/api/lookup' && method === 'POST') {
         return await lookupHandler.onRequestPost(context);
+      }
+
+      if (path === '/api/files') {
+        return await filesHandler.onRequest(context);
       }
 
       // Unknown API route

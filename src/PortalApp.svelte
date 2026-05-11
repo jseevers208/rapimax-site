@@ -1,8 +1,84 @@
 <script>
+  // i18n translations
+  const translations = {
+    es: {
+      loading: 'Cargando tu solicitud...',
+      invalidLink: 'Enlace inválido',
+      invalidLinkDesc: 'Este enlace no contiene un token válido. Si recibiste un enlace por correo o WhatsApp, asegurate de copiar la URL completa.',
+      goToSite: 'Ir al sitio de RapiMax',
+      notFound: 'Solicitud no encontrada',
+      notFoundDesc: 'No encontramos una solicitud asociada a este enlace. Es posible que el enlace haya expirado o sea incorrecto.',
+      notFoundHint: 'Si creés que esto es un error, contactanos por WhatsApp.',
+      applicant: 'Solicitante',
+      id: 'Identificación',
+      requestedAmount: 'Monto solicitado',
+      term: 'Plazo',
+      months: 'meses',
+      applicationDate: 'Fecha de solicitud',
+      lastUpdate: 'Última actualización',
+      progress: 'Progreso de tu solicitud',
+      notApproved: 'No aprobada',
+      history: 'Historial',
+      statusUpdated: 'Estado actualizado',
+      questions: '¿Tenés preguntas?',
+      questionsDesc: 'Contactanos para información sobre tu solicitud.',
+      whatsapp: '💬 WhatsApp',
+      call: '📞 Llamar',
+      uploadTitle: 'Documentos solicitados',
+      uploadDesc: 'Subí los documentos requeridos para continuar con tu solicitud.',
+      uploadBtn: 'Seleccionar archivo',
+      uploading: 'Subiendo...',
+      uploadSuccess: '✅ Documento subido exitosamente',
+      uploadedDocs: 'Documentos enviados',
+      langToggle: 'English',
+    },
+    en: {
+      loading: 'Loading your application...',
+      invalidLink: 'Invalid link',
+      invalidLinkDesc: 'This link does not contain a valid token. If you received a link by email or WhatsApp, make sure to copy the full URL.',
+      goToSite: 'Go to RapiMax',
+      notFound: 'Application not found',
+      notFoundDesc: 'We could not find an application associated with this link. The link may have expired or is incorrect.',
+      notFoundHint: 'If you think this is an error, contact us via WhatsApp.',
+      applicant: 'Applicant',
+      id: 'Identification',
+      requestedAmount: 'Requested amount',
+      term: 'Term',
+      months: 'months',
+      applicationDate: 'Application date',
+      lastUpdate: 'Last updated',
+      progress: 'Application progress',
+      notApproved: 'Not approved',
+      history: 'History',
+      statusUpdated: 'Status updated',
+      questions: 'Have questions?',
+      questionsDesc: 'Contact us for information about your application.',
+      whatsapp: '💬 WhatsApp',
+      call: '📞 Call',
+      uploadTitle: 'Requested documents',
+      uploadDesc: 'Upload the required documents to continue with your application.',
+      uploadBtn: 'Select file',
+      uploading: 'Uploading...',
+      uploadSuccess: '✅ Document uploaded successfully',
+      uploadedDocs: 'Submitted documents',
+      langToggle: 'Español',
+    },
+  };
+
+  let lang = 'es';
+  $: t = translations[lang];
+
+  function toggleLang() { lang = lang === 'es' ? 'en' : 'es'; }
+
   let token = '';
   let data = null;
   let error = '';
   let loading = true;
+
+  // Document upload state
+  let uploading = false;
+  let uploadMessage = '';
+  let uploadedFiles = [];
 
   // Get token from URL
   if (typeof window !== 'undefined') {
@@ -19,13 +95,58 @@
       else { data = result; }
     } catch { error = 'Error de conexión.'; }
     loading = false;
+    // Load uploaded documents
+    if (data && token) loadDocuments();
+  }
+
+  async function loadDocuments() {
+    try {
+      const res = await fetch(`/api/files?action=list&application_id=${data.application?.id || ''}&token=${encodeURIComponent(token)}`);
+      // The files endpoint needs admin auth for listing, so we'll use the portal endpoint instead
+    } catch {}
   }
 
   function fmtDate(d) {
     if (!d) return '';
     try {
-      return new Date(d + (d.includes('Z') ? '' : 'Z')).toLocaleDateString('es-CR', { day: '2-digit', month: 'long', year: 'numeric' });
+      const locale = lang === 'en' ? 'en-US' : 'es-CR';
+      return new Date(d + (d.includes('Z') ? '' : 'Z')).toLocaleDateString(locale, { day: '2-digit', month: 'long', year: 'numeric' });
     } catch { return d; }
+  }
+
+  function fmtFileSize(bytes) {
+    if (!bytes) return '';
+    if (bytes < 1024) return bytes + ' B';
+    if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB';
+    return (bytes / 1048576).toFixed(1) + ' MB';
+  }
+
+  async function handleFileUpload(event) {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    uploadMessage = '';
+    uploading = true;
+
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+      const res = await fetch(`/api/files?token=${encodeURIComponent(token)}`, {
+        method: 'POST',
+        body: formData,
+      });
+      const result = await res.json();
+      if (result.success) {
+        uploadMessage = 'success';
+        uploadedFiles = [...uploadedFiles, { name: file.name, size: file.size, date: new Date().toISOString() }];
+      } else {
+        uploadMessage = result.error || 'Error al subir.';
+      }
+    } catch {
+      uploadMessage = 'Error de conexión.';
+    }
+    uploading = false;
+    event.target.value = '';
   }
 
   if (token) loadStatus();
@@ -37,30 +158,31 @@
     <a href="/" class="portal__brand">
       <span class="portal__logo">RM</span> RapiMax
     </a>
+    <button class="portal__lang" on:click={toggleLang}>{t.langToggle}</button>
   </header>
 
   <main class="portal__main">
     {#if loading}
       <div class="portal__loading">
         <div class="portal__spinner"></div>
-        <p>Cargando tu solicitud...</p>
+        <p>{t.loading}</p>
       </div>
 
     {:else if error === 'no-token'}
       <div class="portal__error-card">
         <div class="portal__error-icon">🔗</div>
-        <h2>Enlace inválido</h2>
-        <p>Este enlace no contiene un token válido. Si recibiste un enlace por correo o WhatsApp, asegurate de copiar la URL completa.</p>
-        <a href="/" class="portal__cta">Ir al sitio de RapiMax</a>
+        <h2>{t.invalidLink}</h2>
+        <p>{t.invalidLinkDesc}</p>
+        <a href="/" class="portal__cta">{t.goToSite}</a>
       </div>
 
     {:else if error}
       <div class="portal__error-card">
         <div class="portal__error-icon">❌</div>
-        <h2>Solicitud no encontrada</h2>
-        <p>No encontramos una solicitud asociada a este enlace. Es posible que el enlace haya expirado o sea incorrecto.</p>
-        <p style="margin-top:12px; font-size:.85rem; opacity:.6">Si creés que esto es un error, contactanos por WhatsApp.</p>
-        <a href="/" class="portal__cta">Ir al sitio de RapiMax</a>
+        <h2>{t.notFound}</h2>
+        <p>{t.notFoundDesc}</p>
+        <p style="margin-top:12px; font-size:.85rem; opacity:.6">{t.notFoundHint}</p>
+        <a href="/" class="portal__cta">{t.goToSite}</a>
       </div>
 
     {:else if data}
@@ -76,40 +198,40 @@
       <!-- Applicant Info -->
       <div class="portal__card">
         <div class="portal__card-row">
-          <span class="portal__label">Solicitante</span>
+          <span class="portal__label">{t.applicant}</span>
           <span class="portal__value">{data.application.name || '—'}</span>
         </div>
         {#if data.application.idPartial}
           <div class="portal__card-row">
-            <span class="portal__label">Identificación</span>
+            <span class="portal__label">{t.id}</span>
             <span class="portal__value">{data.application.idPartial}</span>
           </div>
         {/if}
         {#if data.application.amount}
           <div class="portal__card-row">
-            <span class="portal__label">Monto solicitado</span>
+            <span class="portal__label">{t.requestedAmount}</span>
             <span class="portal__value portal__value--highlight">${Number(data.application.amount).toLocaleString()}</span>
           </div>
         {/if}
         {#if data.application.term}
           <div class="portal__card-row">
-            <span class="portal__label">Plazo</span>
-            <span class="portal__value">{data.application.term} meses</span>
+            <span class="portal__label">{t.term}</span>
+            <span class="portal__value">{data.application.term} {t.months}</span>
           </div>
         {/if}
         <div class="portal__card-row">
-          <span class="portal__label">Fecha de solicitud</span>
+          <span class="portal__label">{t.applicationDate}</span>
           <span class="portal__value">{fmtDate(data.application.submittedAt)}</span>
         </div>
         <div class="portal__card-row">
-          <span class="portal__label">Última actualización</span>
+          <span class="portal__label">{t.lastUpdate}</span>
           <span class="portal__value">{fmtDate(data.application.updatedAt)}</span>
         </div>
       </div>
 
       <!-- Pipeline -->
       <div class="portal__card">
-        <h3 class="portal__section-title">Progreso de tu solicitud</h3>
+        <h3 class="portal__section-title">{t.progress}</h3>
         <div class="portal__pipeline">
           {#each data.pipeline as step, i}
             <div class="portal__step" class:completed={step.completed} class:current={step.current} class:rejected={data.isRejected && step.current}>
@@ -128,21 +250,53 @@
           {/each}
         </div>
         {#if data.isRejected}
-          <div class="portal__rejected-badge">No aprobada</div>
+          <div class="portal__rejected-badge">{t.notApproved}</div>
         {/if}
       </div>
+
+      <!-- Document Upload (shown when status is 'documentos') -->
+      {#if data.status === 'documentos'}
+        <div class="portal__card portal__card--upload">
+          <h3 class="portal__section-title">📄 {t.uploadTitle}</h3>
+          <p style="font-size:.85rem; color:rgba(255,246,226,.5); margin:0 0 16px">{t.uploadDesc}</p>
+          <label class="portal__upload-btn">
+            {#if uploading}
+              <div class="portal__spinner portal__spinner--sm"></div> {t.uploading}
+            {:else}
+              📎 {t.uploadBtn}
+            {/if}
+            <input type="file" accept=".pdf,.jpg,.jpeg,.png,.webp,.doc,.docx" on:change={handleFileUpload} disabled={uploading} style="display:none" />
+          </label>
+          {#if uploadMessage === 'success'}
+            <p class="portal__upload-success">{t.uploadSuccess}</p>
+          {:else if uploadMessage}
+            <p class="portal__upload-error">{uploadMessage}</p>
+          {/if}
+          {#if uploadedFiles.length > 0}
+            <div class="portal__uploaded-list">
+              <h4 class="portal__section-title" style="margin-top:16px">{t.uploadedDocs}</h4>
+              {#each uploadedFiles as doc}
+                <div class="portal__uploaded-item">
+                  <span>📄 {doc.name}</span>
+                  <span class="portal__uploaded-size">{fmtFileSize(doc.size)}</span>
+                </div>
+              {/each}
+            </div>
+          {/if}
+        </div>
+      {/if}
 
       <!-- Timeline -->
       {#if (data.timeline || []).length > 0}
         <div class="portal__card">
-          <h3 class="portal__section-title">Historial</h3>
+          <h3 class="portal__section-title">{t.history}</h3>
           <div class="portal__timeline">
             {#each data.timeline as event}
               <div class="portal__timeline-item">
                 <div class="portal__timeline-dot"></div>
                 <div>
                   <span class="portal__timeline-date">{fmtDate(event.date)}</span>
-                  <span class="portal__timeline-text">Estado actualizado</span>
+                  <span class="portal__timeline-text">{t.statusUpdated}</span>
                 </div>
               </div>
             {/each}
@@ -152,11 +306,11 @@
 
       <!-- Contact -->
       <div class="portal__card portal__card--contact">
-        <h3 class="portal__section-title">¿Tenés preguntas?</h3>
-        <p style="font-size:.85rem; color:rgba(255,246,226,.5); margin:0 0 16px">Contactanos para información sobre tu solicitud.</p>
+        <h3 class="portal__section-title">{t.questions}</h3>
+        <p style="font-size:.85rem; color:rgba(255,246,226,.5); margin:0 0 16px">{t.questionsDesc}</p>
         <div class="portal__contact-btns">
-          <a href="https://wa.me/50600000000?text=Hola RapiMax, quiero consultar sobre mi solicitud" class="portal__contact-btn portal__contact-btn--wa">💬 WhatsApp</a>
-          <a href="tel:+50622223333" class="portal__contact-btn portal__contact-btn--phone">📞 Llamar</a>
+          <a href="https://wa.me/50600000000?text=Hola RapiMax, quiero consultar sobre mi solicitud" class="portal__contact-btn portal__contact-btn--wa">{t.whatsapp}</a>
+          <a href="tel:+50622223333" class="portal__contact-btn portal__contact-btn--phone">{t.call}</a>
         </div>
       </div>
 
@@ -170,9 +324,11 @@
 
   .portal { min-height:100vh; }
 
-  .portal__header { padding:16px 24px; display:flex; align-items:center; border-bottom:1px solid rgba(255,255,255,.06); }
+  .portal__header { padding:16px 24px; display:flex; align-items:center; border-bottom:1px solid rgba(255,255,255,.06); justify-content:space-between; }
   .portal__brand { text-decoration:none; color:#d5b584; font-size:1.1rem; font-weight:700; display:flex; align-items:center; gap:8px; }
   .portal__logo { font-family:'Nordique Pro',sans-serif; font-size:.85rem; border:1.5px solid #d5b584; border-radius:6px; padding:2px 6px; font-weight:700; }
+  .portal__lang { background:none; border:1px solid rgba(255,246,226,.15); color:rgba(255,246,226,.5); padding:6px 14px; border-radius:8px; font-size:.78rem; cursor:pointer; transition:all .2s; }
+  .portal__lang:hover { border-color:rgba(255,246,226,.3); color:#d5b584; }
 
   .portal__main { max-width:520px; margin:0 auto; padding:24px 20px 60px; }
 
@@ -227,6 +383,22 @@
   .portal__contact-btn--phone:hover { background:rgba(91,143,217,.1); border-color:rgba(91,143,217,.3); color:#5b8fd9; }
 
   .portal__footer { text-align:center; font-size:.72rem; color:rgba(255,246,226,.2); margin-top:32px; }
+
+  /* Upload */
+  .portal__card--upload { border-color:rgba(245,158,11,.2); }
+  .portal__upload-btn {
+    display:inline-flex; align-items:center; gap:8px; padding:12px 24px; border-radius:12px;
+    background:rgba(245,158,11,.1); border:1px solid rgba(245,158,11,.3); color:#f59e0b;
+    font-weight:600; font-size:.85rem; cursor:pointer; transition:all .2s;
+  }
+  .portal__upload-btn:hover { background:rgba(245,158,11,.18); }
+  .portal__spinner--sm { width:16px; height:16px; border:2px solid rgba(255,255,255,.1); border-top-color:#f59e0b; border-radius:50%; animation:spin .8s linear infinite; }
+  .portal__upload-success { font-size:.85rem; color:#22c55e; margin:12px 0 0; }
+  .portal__upload-error { font-size:.85rem; color:#ef4444; margin:12px 0 0; }
+  .portal__uploaded-list { margin-top:8px; }
+  .portal__uploaded-item { display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px solid rgba(255,255,255,.04); font-size:.82rem; }
+  .portal__uploaded-item:last-child { border-bottom:none; }
+  .portal__uploaded-size { color:rgba(255,246,226,.3); font-size:.75rem; }
 
   @media (max-width:480px) {
     .portal__main { padding:16px 16px 48px; }

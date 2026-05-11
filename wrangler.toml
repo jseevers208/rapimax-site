@@ -12,6 +12,10 @@ binding = "DB"
 database_name = "rapimax-prod"
 database_id = "80d06894-83c2-4d45-afe7-1f1b1889cf7b"
 
+[[r2_buckets]]
+binding = "DOCUMENTS"
+bucket_name = "rapimax-documents"
+
 # Cron Triggers — email report digests
 [triggers]
 crons = [
