@@ -1,7 +1,9 @@
-# Rapimax — Cloudflare Pages + D1
-# Deploy: npx wrangler pages deploy dist --project-name rapimax
-name = "rapimax"
+# Rapimax — Cloudflare Workers + Assets (unified platform)
+name = "rapimax-site"
 compatibility_date = "2024-12-01"
+
+[assets]
+directory = "./dist"
 
 [[d1_databases]]
 binding = "DB"
