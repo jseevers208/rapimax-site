@@ -9,6 +9,7 @@ import * as contactHandler from './api/contact.js';
 import * as calculatorLeadHandler from './api/calculator-lead.js';
 import * as adminHandler from './api/admin.js';
 import * as contentHandler from './api/content.js';
+import * as casesHandler from './api/cases.js';
 
 export default {
   async fetch(request, env, ctx) {
@@ -43,6 +44,10 @@ export default {
 
       if (path === '/api/content' && method === 'GET') {
         return await contentHandler.onRequestGet(context);
+      }
+
+      if (path === '/api/cases') {
+        return await casesHandler.onRequest(context);
       }
 
       // Unknown API route

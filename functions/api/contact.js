@@ -1,4 +1,4 @@
-import { corsResponse, handleOptions, errorResponse } from './_helpers.js';
+import { corsResponse, handleOptions, errorResponse, autoCreateCase } from './_helpers.js';
 
 export async function onRequestOptions() {
   return handleOptions();
@@ -59,6 +59,15 @@ export async function onRequestPost(context) {
         console.error('Email notification failed:', emailErr);
       }
     }
+
+    // Auto-create or link Case
+    await autoCreateCase(env.DB, {
+      source: 'contacto',
+      fullName: data.fullName,
+      email: data.email,
+      phone: data.phone,
+      linkedContactId: insertResult.meta?.last_row_id,
+    });
 
     return corsResponse({ success: true, message: 'Mensaje enviado exitosamente.' });
   } catch (err) {

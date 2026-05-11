@@ -1,4 +1,4 @@
-import { corsResponse, handleOptions, errorResponse, camelToSnake } from './_helpers.js';
+import { corsResponse, handleOptions, errorResponse, camelToSnake, autoCreateCase } from './_helpers.js';
 
 export async function onRequestOptions() {
   return handleOptions();
@@ -87,6 +87,16 @@ export async function onRequestPost(context) {
         `INSERT INTO activity_log (record_type, record_id, action, new_value, actor) VALUES (?, ?, ?, ?, ?)`
       ).bind('applications', result.meta?.last_row_id, 'created', data.applicantFullName || 'N/A', 'system').run();
     } catch (e) { console.error('Activity log error:', e); }
+
+    // Auto-create or link Case
+    await autoCreateCase(env.DB, {
+      source: 'solicitud',
+      fullName: data.applicantFullName,
+      email: data.personalEmail,
+      phone: data.cellPhone,
+      linkedApplicationId: result.meta?.last_row_id,
+      estimatedValue: data.requestedCreditAmount || null,
+    });
 
     return corsResponse({
       success: true,

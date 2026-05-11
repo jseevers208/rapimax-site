@@ -16,6 +16,7 @@
       applications: 'Solicitudes',
       contacts: 'Contactos',
       leads: 'Leads',
+      cases: 'Casos',
       settings: 'Configuración',
       search_placeholder: 'Buscar por nombre, cédula, email, teléfono...',
       export_csv: 'Exportar CSV',
@@ -102,6 +103,12 @@
       nueva: 'Nueva', 'en-proceso': 'En proceso', contactada: 'Contactada', documentos: 'Documentos',
       'en-revision': 'En revisión', aprobada: 'Aprobada', rechazada: 'Rechazada',
       desembolsada: 'Desembolsada', completada: 'Completada',
+      lead: 'Lead', contactado: 'Contactado', cerrado: 'Cerrado',
+      create_case: 'Crear caso', view_kanban: 'Kanban', view_list: 'Lista',
+      follow_up: 'Seguimiento', next_steps_label: 'Próximos pasos',
+      overdue: 'Vencidos', unassigned: 'Sin asignar', source_label: 'Origen',
+      linked_records: 'Registros vinculados', lookup_placeholder: 'Buscar por nombre, email o teléfono...',
+      case_detail: 'Detalle del caso', estimated_value_label: 'Valor estimado',
       normal: 'Normal', alta: 'Alta', urgente: 'Urgente',
       status_changed: 'Estado cambiado', note_added: 'Nota agregada',
       assigned: 'Asignado', exported: 'Exportado', created: 'Creado',
@@ -116,6 +123,7 @@
       applications: 'Applications',
       contacts: 'Contacts',
       leads: 'Leads',
+      cases: 'Cases',
       settings: 'Settings',
       search_placeholder: 'Search by name, ID, email, phone...',
       export_csv: 'Export CSV',
@@ -202,6 +210,12 @@
       nueva: 'New', 'en-proceso': 'In progress', contactada: 'Contacted', documentos: 'Documents',
       'en-revision': 'Under review', aprobada: 'Approved', rechazada: 'Rejected',
       desembolsada: 'Disbursed', completada: 'Completed',
+      lead: 'Lead', contactado: 'Contacted', cerrado: 'Closed',
+      create_case: 'Create case', view_kanban: 'Kanban', view_list: 'List',
+      follow_up: 'Follow-up', next_steps_label: 'Next steps',
+      overdue: 'Overdue', unassigned: 'Unassigned', source_label: 'Source',
+      linked_records: 'Linked records', lookup_placeholder: 'Search by name, email or phone...',
+      case_detail: 'Case detail', estimated_value_label: 'Estimated value',
       normal: 'Normal', alta: 'High', urgente: 'Urgent',
       status_changed: 'Status changed', note_added: 'Note added',
       assigned: 'Assigned', exported: 'Exported', created: 'Created',
@@ -268,6 +282,32 @@
   let editingPartner = null; // null = list view, object = editing
   let newPartner = { name: '', category: 'dealer', address: '', province: '', latitude: '', longitude: '', phone: '', website: '', isActive: 1, sortOrder: 0 };
 
+  // Cases CRM
+  let casesView = 'kanban'; // 'kanban' | 'list'
+  let casesKanban = {};
+  let casesList = [];
+  let casesTotal = 0;
+  let casesPage = 1;
+  let casesTotalPages = 1;
+  let casesLoading = false;
+  let caseDetail = null;
+  let caseNotes = [];
+  let caseActivity = [];
+  let caseNewNote = '';
+  let caseNoteSaving = false;
+  let showCreateCase = false;
+  let lookupQuery = '';
+  let lookupResults = [];
+  let lookupLoading = false;
+  let newCase = { fullName: '', email: '', phone: '', source: 'manual', status: 'lead', assignedTo: '', priority: 'normal', followUpDate: '', nextSteps: '', estimatedValue: '', linkedApplicationId: null, linkedContactId: null, linkedLeadIds: [] };
+  let casesStats = null;
+
+  const CASE_STATUSES = ['lead', 'contactado', 'en-proceso', 'documentos', 'en-revision', 'aprobado', 'rechazado', 'desembolsado', 'cerrado'];
+  const CASE_STATUS_COLORS = {
+    lead: '#d5b584', contactado: '#8b5cf6', 'en-proceso': '#5b8fd9', documentos: '#f59e0b',
+    'en-revision': '#6366f1', aprobado: '#22c55e', rechazado: '#ef4444', desembolsado: '#14b8a6', cerrado: '#6b7280',
+  };
+
   const STATUS_LIST = ['nueva', 'en-proceso', 'contactada', 'documentos', 'en-revision', 'aprobada', 'rechazada', 'desembolsada', 'completada'];
   const PRIORITY_LIST = ['normal', 'alta', 'urgente'];
   const STATUS_COLORS = {
@@ -281,6 +321,7 @@
     { id: 'applications', icon: '📋' },
     { id: 'contacts', icon: '💬' },
     { id: 'leads', icon: '📈' },
+    { id: 'cases', icon: '🗂️' },
     { id: 'settings', icon: '⚙️' },
   ];
 
@@ -363,9 +404,10 @@
   function switchTab(tabId) {
     activeTab = tabId;
     page = 1; searchQuery = ''; filterStatus = ''; filterPriority = ''; dateFrom = ''; dateTo = '';
-    detailView = null; data = [];
+    detailView = null; data = []; caseDetail = null;
     if (tabId === 'dashboard') loadDashboard();
     else if (tabId === 'settings') loadSettings();
+    else if (tabId === 'cases') loadCases();
     else if (['applications', 'contacts', 'leads'].includes(tabId)) fetchList(tabId);
   }
 
@@ -549,6 +591,140 @@
     settingsTab = tab;
     if (tab === 'content' && !contentBlocks.length) loadContent();
     if (tab === 'partners' && !partners.length) loadPartners();
+  }
+
+  // ============================================
+  // Cases CRM
+  // ============================================
+  async function loadCasesKanban() {
+    casesLoading = true;
+    try {
+      const res = await fetch('/api/cases?action=kanban', { headers: { Authorization: `Bearer ${token}` } });
+      if (res.status === 401) { handleLogout(); return; }
+      const result = await res.json();
+      casesKanban = result.kanban || {};
+    } catch { casesKanban = {}; }
+    casesLoading = false;
+  }
+
+  async function loadCasesList() {
+    casesLoading = true;
+    const params = new URLSearchParams({ action: 'list', page: String(casesPage), sort: 'updated_at', dir: 'desc' });
+    if (filterStatus) params.set('status', filterStatus);
+    if (filterPriority) params.set('priority', filterPriority);
+    if (searchQuery) params.set('q', searchQuery);
+    try {
+      const res = await fetch(`/api/cases?${params}`, { headers: { Authorization: `Bearer ${token}` } });
+      const result = await res.json();
+      casesList = result.data || [];
+      casesTotal = result.total || 0;
+      casesTotalPages = result.totalPages || 1;
+    } catch { casesList = []; }
+    casesLoading = false;
+  }
+
+  async function loadCasesStats() {
+    try {
+      const res = await fetch('/api/cases?action=stats', { headers: { Authorization: `Bearer ${token}` } });
+      casesStats = await res.json();
+    } catch { casesStats = null; }
+  }
+
+  function loadCases() {
+    loadCasesStats();
+    if (casesView === 'kanban') loadCasesKanban();
+    else loadCasesList();
+  }
+
+  async function openCaseDetail(id) {
+    casesLoading = true;
+    try {
+      const res = await fetch(`/api/cases?action=detail&id=${id}`, { headers: { Authorization: `Bearer ${token}` } });
+      const result = await res.json();
+      caseDetail = result.case;
+      caseNotes = result.notes || [];
+      caseActivity = result.activity || [];
+    } catch {}
+    casesLoading = false;
+  }
+
+  function closeCaseDetail() { caseDetail = null; caseNotes = []; caseActivity = []; caseNewNote = ''; }
+
+  async function updateCase(id, updates) {
+    await fetch('/api/cases', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ action: 'update', id, ...updates }),
+    });
+    if (caseDetail && caseDetail.id === id) {
+      Object.assign(caseDetail, updates);
+      caseDetail = caseDetail;
+    }
+    loadCases();
+  }
+
+  async function moveCaseStatus(id, newStatus) {
+    await fetch('/api/cases', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ action: 'move', id, status: newStatus }),
+    });
+    loadCases();
+  }
+
+  async function addCaseNote() {
+    if (!caseNewNote.trim() || !caseDetail) return;
+    caseNoteSaving = true;
+    await fetch('/api/cases', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ action: 'add_note', id: caseDetail.id, content: caseNewNote.trim() }),
+    });
+    caseNewNote = '';
+    const res = await fetch(`/api/cases?action=detail&id=${caseDetail.id}`, { headers: { Authorization: `Bearer ${token}` } });
+    const result = await res.json();
+    caseNotes = result.notes || [];
+    caseActivity = result.activity || [];
+    caseNoteSaving = false;
+  }
+
+  async function createCase() {
+    if (!newCase.fullName && !newCase.email) return;
+    await fetch('/api/cases', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ action: 'create', ...newCase }),
+    });
+    showCreateCase = false;
+    newCase = { fullName: '', email: '', phone: '', source: 'manual', status: 'lead', assignedTo: '', priority: 'normal', followUpDate: '', nextSteps: '', estimatedValue: '', linkedApplicationId: null, linkedContactId: null, linkedLeadIds: [] };
+    loadCases();
+  }
+
+  let lookupTimeout;
+  async function handleLookup() {
+    clearTimeout(lookupTimeout);
+    if (lookupQuery.length < 2) { lookupResults = []; return; }
+    lookupTimeout = setTimeout(async () => {
+      lookupLoading = true;
+      try {
+        const res = await fetch(`/api/cases?action=lookup&q=${encodeURIComponent(lookupQuery)}`, { headers: { Authorization: `Bearer ${token}` } });
+        const result = await res.json();
+        lookupResults = result.results || [];
+      } catch { lookupResults = []; }
+      lookupLoading = false;
+    }, 300);
+  }
+
+  function linkLookupResult(result) {
+    newCase.fullName = result.name || newCase.fullName;
+    newCase.email = result.email || newCase.email;
+    newCase.phone = result.phone || newCase.phone;
+    newCase.source = result.source || 'manual';
+    if (result.source === 'application') newCase.linkedApplicationId = result.id;
+    if (result.source === 'contact') newCase.linkedContactId = result.id;
+    if (result.source === 'lead') newCase.linkedLeadIds = [result.id];
+    lookupResults = [];
+    lookupQuery = '';
   }
 
   // ============================================
@@ -1027,6 +1203,233 @@
         {/if}
       {/if}
 
+    <!-- ======== CASES CRM ======== -->
+    {:else if activeTab === 'cases'}
+      {#if caseDetail}
+        <!-- Case Detail View -->
+        <button class="back-btn" on:click={closeCaseDetail}>← {t('back')}</button>
+        <div class="detail">
+          <div class="detail__header">
+            <div>
+              <h2>{caseDetail.fullName || caseDetail.email || '—'}</h2>
+              <p class="detail__sub">#{caseDetail.id} · {t('source_label')}: {caseDetail.source || '—'} · {fmtDate(caseDetail.createdAt)}</p>
+            </div>
+            <div class="detail__actions">
+              {#if caseDetail.phone}
+                <button class="action-btn action-btn--wa" on:click={() => openWhatsApp(caseDetail.phone)}>💬 {t('whatsapp')}</button>
+                <button class="action-btn action-btn--call" on:click={() => openCall(caseDetail.phone)}>📞 {t('call')}</button>
+              {/if}
+              {#if caseDetail.email}
+                <button class="action-btn action-btn--email" on:click={() => openEmail(caseDetail.email)}>✉️ {t('send_email')}</button>
+              {/if}
+            </div>
+          </div>
+          <div class="detail__controls">
+            <label><span class="detail__label">{t('status')}</span>
+              <select class="status-sel" value={caseDetail.status} on:change={e => updateCase(caseDetail.id, { status: e.target.value })}>
+                {#each CASE_STATUSES as s}<option value={s}>{t(s) || s}</option>{/each}
+              </select></label>
+            <label><span class="detail__label">{t('priority')}</span>
+              <select class="priority-sel" value={caseDetail.priority || 'normal'} on:change={e => updateCase(caseDetail.id, { priority: e.target.value })}>
+                {#each PRIORITY_LIST as p}<option value={p}>{t(p)}</option>{/each}
+              </select></label>
+            <label><span class="detail__label">{t('assigned_to')}</span>
+              <input type="text" class="status-sel" value={caseDetail.assignedTo || ''} placeholder="Nombre..."
+                on:change={e => updateCase(caseDetail.id, { assignedTo: e.target.value })} /></label>
+            <label><span class="detail__label">{t('follow_up')}</span>
+              <input type="date" class="status-sel" value={caseDetail.followUpDate || ''}
+                on:change={e => updateCase(caseDetail.id, { followUpDate: e.target.value })} /></label>
+          </div>
+          <div class="detail__sections">
+            <section class="detail__section">
+              <h4>{t('case_detail')}</h4>
+              <div class="detail__grid">
+                <div><span class="lbl">{t('name')}</span><span>{caseDetail.fullName || '—'}</span></div>
+                <div><span class="lbl">{t('email')}</span><span>{caseDetail.email || '—'}</span></div>
+                <div><span class="lbl">{t('phone')}</span><span>{caseDetail.phone || '—'}</span></div>
+                <div><span class="lbl">{t('source_label')}</span><span>{caseDetail.source || '—'}</span></div>
+                <div><span class="lbl">{t('estimated_value_label')}</span><span>{caseDetail.estimatedValue ? fmtMoney(caseDetail.estimatedValue) : '—'}</span></div>
+                <div class="detail__grid--full"><span class="lbl">{t('next_steps_label')}</span>
+                  <textarea rows="2" value={caseDetail.nextSteps || ''} style="width:100%;padding:8px 12px;border-radius:8px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.04);color:#fff;font-size:.85rem;font-family:inherit;resize:vertical;"
+                    on:change={e => updateCase(caseDetail.id, { nextSteps: e.target.value })}></textarea>
+                </div>
+              </div>
+            </section>
+          </div>
+          <section class="detail__section">
+            <h4>{t('notes')} ({caseNotes.length})</h4>
+            <form class="note-form" on:submit|preventDefault={addCaseNote}>
+              <textarea bind:value={caseNewNote} placeholder={t('note_placeholder')} rows="2"></textarea>
+              <button type="submit" class="note-submit" disabled={caseNoteSaving || !caseNewNote.trim()}>{caseNoteSaving ? '...' : t('add_note')}</button>
+            </form>
+            <div class="notes-list">
+              {#each caseNotes as note}
+                <div class="note-item"><div class="note-meta">{note.author} · {fmtDate(note.createdAt)}</div><div class="note-content">{note.content}</div></div>
+              {/each}
+            </div>
+          </section>
+          <section class="detail__section">
+            <h4>{t('history')} ({caseActivity.length})</h4>
+            <div class="timeline">
+              {#each caseActivity as act}
+                <div class="timeline-item"><span class="timeline-dot" style="background:{CASE_STATUS_COLORS[act.newValue] || '#6b7280'}"></span>
+                  <div><strong>{t(act.action) || act.action}</strong> {act.oldValue ? `${act.oldValue} → ${act.newValue}` : (act.newValue || '')}
+                    <div class="timeline-meta">{act.actor} · {fmtDate(act.createdAt)}</div></div>
+                </div>
+              {/each}
+            </div>
+          </section>
+        </div>
+
+      {:else}
+        <!-- Cases header with view toggle + create -->
+        <div class="toolbar" style="margin-bottom:12px">
+          <div style="display:flex;gap:6px">
+            <button class="cms-tab" class:active={casesView === 'kanban'} on:click={() => { casesView = 'kanban'; loadCasesKanban(); }}>🗂️ {t('view_kanban')}</button>
+            <button class="cms-tab" class:active={casesView === 'list'} on:click={() => { casesView = 'list'; loadCasesList(); }}>📋 {t('view_list')}</button>
+          </div>
+          {#if casesStats}
+            <div style="display:flex;gap:16px;font-size:.82rem;color:rgba(255,246,226,.5)">
+              <span>{t('total')}: <strong style="color:#d5b584">{casesStats.total}</strong></span>
+              <span>{t('overdue')}: <strong style="color:#ef4444">{casesStats.overdue}</strong></span>
+              <span>{t('unassigned')}: <strong style="color:#f59e0b">{casesStats.unassigned}</strong></span>
+            </div>
+          {/if}
+          <button class="save-btn" on:click={() => showCreateCase = !showCreateCase}>{showCreateCase ? t('cancel') : '+ ' + t('create_case')}</button>
+        </div>
+
+        <!-- Create Case form -->
+        {#if showCreateCase}
+          <div class="content-add" style="margin-bottom:16px">
+            <h4 style="margin:0 0 12px;font-size:.9rem">{t('create_case')}</h4>
+            <div style="margin-bottom:12px">
+              <input type="search" class="toolbar__search" placeholder={t('lookup_placeholder')} bind:value={lookupQuery} on:input={handleLookup} style="width:100%;margin-bottom:8px" />
+              {#if lookupResults.length}
+                <div style="border:1px solid rgba(255,255,255,.1);border-radius:10px;overflow:hidden;max-height:180px;overflow-y:auto">
+                  {#each lookupResults as r}
+                    <button style="display:flex;justify-content:space-between;width:100%;padding:10px 14px;background:rgba(255,255,255,.03);border:none;border-bottom:1px solid rgba(255,255,255,.05);color:#e8e4dc;cursor:pointer;text-align:left;font-size:.82rem" on:click={() => linkLookupResult(r)}>
+                      <span><strong>{r.name || '—'}</strong> · {r.email || '—'}</span>
+                      <span style="color:rgba(255,246,226,.4)">{r.source} · {fmtShortDate(r.createdAt)}</span>
+                    </button>
+                  {/each}
+                </div>
+              {/if}
+            </div>
+            <div class="content-add__grid">
+              <label class="settings__field"><span>{t('name')}</span><input type="text" bind:value={newCase.fullName} /></label>
+              <label class="settings__field"><span>{t('email')}</span><input type="email" bind:value={newCase.email} /></label>
+              <label class="settings__field"><span>{t('phone')}</span><input type="tel" bind:value={newCase.phone} /></label>
+              <label class="settings__field"><span>{t('assigned_to')}</span><input type="text" bind:value={newCase.assignedTo} placeholder="Nombre..." /></label>
+              <label class="settings__field"><span>{t('priority')}</span>
+                <select bind:value={newCase.priority}>{#each PRIORITY_LIST as p}<option value={p}>{t(p)}</option>{/each}</select></label>
+              <label class="settings__field"><span>{t('follow_up')}</span><input type="date" bind:value={newCase.followUpDate} /></label>
+              <label class="settings__field settings__field--full"><span>{t('next_steps_label')}</span><textarea rows="2" bind:value={newCase.nextSteps}></textarea></label>
+            </div>
+            <button class="save-btn" style="margin-top:12px" on:click={createCase}>{t('save')}</button>
+          </div>
+        {/if}
+
+        {#if casesLoading}
+          <div class="empty">{t('loading')}</div>
+
+        <!-- KANBAN VIEW -->
+        {:else if casesView === 'kanban'}
+          <div class="kanban">
+            {#each CASE_STATUSES as status}
+              <div class="kanban__col">
+                <div class="kanban__col-header" style="border-bottom-color:{CASE_STATUS_COLORS[status]}">
+                  <span>{t(status) || status}</span>
+                  <span class="kanban__count">{(casesKanban[status] || []).length}</span>
+                </div>
+                <div class="kanban__cards">
+                  {#each (casesKanban[status] || []) as c}
+                    <div class="kanban__card" on:click={() => openCaseDetail(c.id)} on:keydown={e => e.key === 'Enter' && openCaseDetail(c.id)} role="button" tabindex="0">
+                      <div class="kanban__card-name">{c.fullName || c.email || '—'}</div>
+                      <div class="kanban__card-meta">
+                        {#if c.estimatedValue}<span>{fmtMoney(c.estimatedValue)}</span>{/if}
+                        {#if c.source}<span class="kanban__source">{c.source}</span>{/if}
+                      </div>
+                      {#if c.assignedTo}<div class="kanban__card-assigned">→ {c.assignedTo}</div>{/if}
+                      {#if c.followUpDate}
+                        <div class="kanban__card-followup" class:overdue={c.followUpDate < new Date().toISOString().slice(0,10)}>
+                          📅 {fmtShortDate(c.followUpDate)}
+                        </div>
+                      {/if}
+                      <div class="kanban__card-actions">
+                        {#if CASE_STATUSES.indexOf(status) > 0}
+                          <button class="mini-btn" title="← Mover atrás" on:click|stopPropagation={() => moveCaseStatus(c.id, CASE_STATUSES[CASE_STATUSES.indexOf(status) - 1])}>←</button>
+                        {/if}
+                        {#if CASE_STATUSES.indexOf(status) < CASE_STATUSES.length - 1}
+                          <button class="mini-btn" title="Mover →" on:click|stopPropagation={() => moveCaseStatus(c.id, CASE_STATUSES[CASE_STATUSES.indexOf(status) + 1])}>→</button>
+                        {/if}
+                      </div>
+                    </div>
+                  {/each}
+                </div>
+              </div>
+            {/each}
+          </div>
+
+        <!-- LIST VIEW -->
+        {:else}
+          <div class="toolbar" style="margin-top:0">
+            <input type="search" class="toolbar__search" placeholder={t('search_placeholder')} bind:value={searchQuery} on:input={() => { casesPage = 1; loadCasesList(); }} />
+            <div class="toolbar__filters">
+              <select class="toolbar__select" bind:value={filterStatus} on:change={() => { casesPage = 1; loadCasesList(); }}>
+                <option value="">{t('all')} {t('status').toLowerCase()}</option>
+                {#each CASE_STATUSES as s}<option value={s}>{t(s) || s}</option>{/each}
+              </select>
+              <select class="toolbar__select" bind:value={filterPriority} on:change={() => { casesPage = 1; loadCasesList(); }}>
+                <option value="">{t('all')} {t('priority').toLowerCase()}</option>
+                {#each PRIORITY_LIST as p}<option value={p}>{t(p)}</option>{/each}
+              </select>
+            </div>
+          </div>
+          {#if casesList.length === 0}
+            <div class="empty">{t('no_records')}</div>
+          {:else}
+            <div class="table-wrap">
+              <table class="table">
+                <thead><tr>
+                  <th>{t('date')}</th><th>{t('name')}</th><th>{t('email')}</th><th>{t('phone')}</th>
+                  <th>{t('source_label')}</th><th>{t('status')}</th><th>{t('priority')}</th>
+                  <th>{t('assigned_to')}</th><th>{t('follow_up')}</th><th>{t('actions')}</th>
+                </tr></thead>
+                <tbody>
+                  {#each casesList as c}
+                    <tr class="row--click" on:click={() => openCaseDetail(c.id)}>
+                      <td>{fmtShortDate(c.updatedAt || c.createdAt)}</td>
+                      <td class="cell--name">{c.fullName || '—'}</td>
+                      <td>{c.email || '—'}</td>
+                      <td>{c.phone || '—'}</td>
+                      <td><span class="cat-badge">{c.source || '—'}</span></td>
+                      <td><select class="inline-sel" style="color:{CASE_STATUS_COLORS[c.status]}" value={c.status}
+                        on:click|stopPropagation on:change={e => moveCaseStatus(c.id, e.target.value)}>
+                        {#each CASE_STATUSES as s}<option value={s}>{t(s) || s}</option>{/each}
+                      </select></td>
+                      <td><span class="priority-badge" style="color:{PRIORITY_COLORS[c.priority || 'normal']}">{t(c.priority || 'normal')}</span></td>
+                      <td>{c.assignedTo || '—'}</td>
+                      <td class:overdue={c.followUpDate && c.followUpDate < new Date().toISOString().slice(0,10)}>{c.followUpDate ? fmtShortDate(c.followUpDate) : '—'}</td>
+                      <td class="cell--actions" on:click|stopPropagation>
+                        {#if c.phone}<button class="mini-btn" title="WhatsApp" on:click={() => openWhatsApp(c.phone)}>💬</button>{/if}
+                        <button class="mini-btn" title={t('detail')} on:click={() => openCaseDetail(c.id)}>👁️</button>
+                      </td>
+                    </tr>
+                  {/each}
+                </tbody>
+              </table>
+            </div>
+            {#if casesTotalPages > 1}
+              <div class="pagination">
+                <button disabled={casesPage <= 1} on:click={() => { casesPage--; loadCasesList(); }}>{t('prev')}</button>
+                <span>{t('page_of').replace('{page}', casesPage).replace('{total}', casesTotalPages)}</span>
+                <button disabled={casesPage >= casesTotalPages} on:click={() => { casesPage++; loadCasesList(); }}>{t('next')}</button>
+              </div>
+            {/if}
+          {/if}
+        {/if}
+      {/if}
+
     <!-- ======== SETTINGS / CMS ======== -->
     {:else if activeTab === 'settings'}
       {#if loading}
@@ -1456,6 +1859,23 @@
   .settings__actions { display:flex; gap:12px; }
   .save-btn { padding:12px 28px; border-radius:12px; border:none; background:linear-gradient(135deg, #d5b584, #c9a36e); color:#0a1929; font-weight:700; font-size:.9rem; cursor:pointer; }
   .save-btn:disabled { opacity:.5; }
+
+  /* ---- KANBAN ---- */
+  .kanban { display:flex; gap:10px; overflow-x:auto; padding-bottom:8px; }
+  .kanban__col { min-width:180px; flex:1; max-width:220px; }
+  .kanban__col-header { font-size:.75rem; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:rgba(255,246,226,.5); padding:8px 10px; margin-bottom:8px; border-bottom:2px solid; }
+  .kanban__count { background:rgba(255,255,255,.06); padding:2px 6px; border-radius:6px; font-size:.7rem; margin-left:6px; }
+  .kanban__cards { display:flex; flex-direction:column; gap:6px; }
+  .kanban__card { padding:12px; border-radius:10px; background:rgba(255,255,255,.03); border:1px solid rgba(255,255,255,.06); cursor:pointer; transition:background .15s; }
+  .kanban__card:hover { background:rgba(213,181,132,.04); border-color:rgba(213,181,132,.15); }
+  .kanban__card-name { font-weight:600; font-size:.82rem; color:#fff; margin-bottom:4px; }
+  .kanban__card-meta { display:flex; gap:6px; font-size:.72rem; color:rgba(255,246,226,.4); }
+  .kanban__source { background:rgba(255,255,255,.06); padding:1px 6px; border-radius:4px; }
+  .kanban__card-assigned { font-size:.72rem; color:rgba(255,246,226,.35); margin-top:4px; }
+  .kanban__card-followup { font-size:.72rem; color:rgba(255,246,226,.4); margin-top:4px; }
+  .kanban__card-followup.overdue { color:#ef4444; font-weight:600; }
+  .kanban__card-actions { display:flex; gap:4px; margin-top:6px; }
+  .overdue { color:#ef4444 !important; font-weight:600; }
 
   /* ---- CMS SUB-TABS ---- */
   .cms-tabs { display:flex; gap:6px; margin-bottom:20px; flex-wrap:wrap; }
