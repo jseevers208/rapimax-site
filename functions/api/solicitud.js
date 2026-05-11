@@ -141,6 +141,61 @@ export async function onRequestPost(context) {
       }
     }
 
+    // Send confirmation email to customer
+    if (env.RESEND_API_KEY && data.personalEmail) {
+      try {
+        const siteUrl = env.SITE_URL || 'https://rapimax-dev.com';
+        const portalLink = `${siteUrl}/mi-solicitud?token=${accessToken}`;
+        await fetch('https://api.resend.com/emails', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${env.RESEND_API_KEY}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            from: env.EMAIL_FROM || 'RapiMax <notificaciones@rapimax.co.cr>',
+            to: [data.personalEmail],
+            subject: `Tu solicitud fue recibida — RapiMax`,
+            html: `
+              <div style="font-family:Arial,sans-serif;max-width:560px;margin:0 auto;color:#333;">
+                <div style="background:#0a1929;padding:28px;border-radius:12px 12px 0 0;text-align:center;">
+                  <h1 style="color:#d5b584;margin:0;font-size:22px;">RapiMax</h1>
+                  <p style="color:rgba(255,246,226,.6);margin:8px 0 0;font-size:13px;">Financiamiento inteligente</p>
+                </div>
+                <div style="padding:28px;background:#fff;border:1px solid #eee;">
+                  <h2 style="font-size:18px;color:#0a1929;margin:0 0 16px;">¡Hola, ${data.applicantFullName}!</h2>
+                  <p style="font-size:15px;line-height:1.6;margin:0 0 20px;">
+                    Recibimos tu solicitud de financiamiento exitosamente. Nuestro equipo la revisará y un asesor te contactará pronto.
+                  </p>
+                  <div style="background:#f8f9fa;border-radius:8px;padding:16px;margin-bottom:24px;">
+                    <table style="width:100%;border-collapse:collapse;">
+                      ${data.requestedCreditAmount ? `<tr><td style="padding:4px 0;color:#666;">Monto solicitado</td><td style="text-align:right;font-weight:bold;">$${Number(data.requestedCreditAmount).toLocaleString()}</td></tr>` : ''}
+                      ${data.requestedTermMonths ? `<tr><td style="padding:4px 0;color:#666;">Plazo</td><td style="text-align:right;font-weight:bold;">${data.requestedTermMonths} meses</td></tr>` : ''}
+                      <tr><td style="padding:4px 0;color:#666;">Estado</td><td style="text-align:right;font-weight:bold;color:#d5b584;">Recibida ✓</td></tr>
+                    </table>
+                  </div>
+                  <p style="font-size:14px;line-height:1.6;margin:0 0 20px;">
+                    Podés consultar el estado de tu solicitud en cualquier momento usando el siguiente enlace:
+                  </p>
+                  <div style="text-align:center;margin-bottom:24px;">
+                    <a href="${portalLink}" style="display:inline-block;padding:14px 32px;background:#0a1929;color:#d5b584;border-radius:8px;text-decoration:none;font-weight:bold;font-size:15px;">Ver estado de mi solicitud</a>
+                  </div>
+                  <p style="font-size:12px;color:#999;line-height:1.5;margin:0;">
+                    Guardá este correo — el enlace es tu acceso directo al portal de tu solicitud. Si tenés preguntas, respondé a este correo o contactanos por WhatsApp.
+                  </p>
+                </div>
+                <div style="padding:16px;text-align:center;font-size:11px;color:#999;border-top:1px solid #eee;">
+                  Rapi Moto Credit S.A. · 3-101-748267 · ${siteUrl}
+                </div>
+              </div>
+            `,
+          }),
+        });
+      } catch (custEmailErr) {
+        console.error('Customer confirmation email failed:', custEmailErr);
+      }
+    }
+
     // Log activity
     try {
       await env.DB.prepare(
