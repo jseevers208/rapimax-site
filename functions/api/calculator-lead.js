@@ -19,11 +19,12 @@ export async function onRequestPost(context) {
 
     await env.DB.prepare(
       `INSERT INTO calculator_leads
-       (email, vehicle_type, vehicle_use, currency, vehicle_value, vehicle_year,
+       (email, full_name, phone, vehicle_type, vehicle_use, currency, vehicle_value, vehicle_year,
         down_payment, term_months, monthly_payment, annual_rate, ip_address, user_agent)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
     ).bind(
-      data.email, data.vehicleType || null, data.vehicleUse || null,
+      data.email, data.fullName || null, data.phone || null,
+      data.vehicleType || null, data.vehicleUse || null,
       data.currency || null, data.vehicleValue || null, data.vehicleYear || null,
       data.downPayment || null, data.termMonths || null, data.monthlyPayment || null,
       data.annualRate || null, ip, ua

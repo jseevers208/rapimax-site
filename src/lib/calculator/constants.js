@@ -88,8 +88,8 @@ export const CALCULATOR_STEPS = [
   },
   {
     id: 'email',
-    title: 'Ingresá tu correo para ver tu tasa referencial',
-    description: 'No enviamos estos datos a ningún servicio en esta versión.',
+    title: 'Ingresá tus datos para ver tu tasa referencial',
+    description: 'Necesitamos tu información de contacto para mostrarte tu cotización.',
     kind: 'email'
   }
 ];

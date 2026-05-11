@@ -50,7 +50,9 @@
     year: '',
     downPayment: '',
     termMonths: '',
-    email: ''
+    email: '',
+    fullName: '',
+    phone: ''
   });
 
   let currentStepIndex = 0;
@@ -161,6 +163,7 @@
         return '';
       }
       case 'email':
+        if (!answers.fullName.trim()) return 'Ingresá tu nombre completo.';
         if (!answers.email.trim()) return 'Ingresá un correo electrónico para ver tu tasa.';
         if (!EMAIL_REGEX.test(answers.email.trim())) {
           return 'Ingresá un correo electrónico válido.';
@@ -217,6 +220,8 @@
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           email: answers.email,
+          fullName: answers.fullName,
+          phone: answers.phone,
           vehicleType: answers.vehicleType,
           vehicleUse: answers.vehicleUse,
           currency: answers.currency,
@@ -454,6 +459,21 @@
                       <span class="field-card__hint">Máximo permitido: {MAX_TERM_MONTHS} meses.</span>
                     </label>
                   {:else if activeStep.kind === 'email'}
+                    <label class="field-card" for="fullName">
+                      <span class="field-card__label">Nombre completo</span>
+                      <div class="field-card__input-wrap field-card__input-wrap--email">
+                        <span>Nombre</span>
+                        <input
+                          id="fullName"
+                          type="text"
+                          inputmode="text"
+                          autocomplete="name"
+                          placeholder="Tu nombre completo"
+                          value={answers.fullName}
+                          on:input={(event) => setAnswer('fullName', event.currentTarget.value)}
+                        />
+                      </div>
+                    </label>
                     <label class="field-card" for="email">
                       <span class="field-card__label">Correo electrónico</span>
                       <div class="field-card__input-wrap field-card__input-wrap--email">
@@ -465,6 +485,21 @@
                           placeholder="tu@correo.com"
                           value={answers.email}
                           on:input={(event) => setAnswer('email', event.currentTarget.value)}
+                        />
+                      </div>
+                    </label>
+                    <label class="field-card" for="phone">
+                      <span class="field-card__label">Número de celular</span>
+                      <div class="field-card__input-wrap field-card__input-wrap--email">
+                        <span>Cel</span>
+                        <input
+                          id="phone"
+                          type="tel"
+                          inputmode="tel"
+                          autocomplete="tel"
+                          placeholder="8888-7777"
+                          value={answers.phone}
+                          on:input={(event) => setAnswer('phone', event.currentTarget.value)}
                         />
                       </div>
                       <span class="field-card__hint">
