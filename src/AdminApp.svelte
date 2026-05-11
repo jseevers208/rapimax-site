@@ -208,7 +208,7 @@
     },
   };
 
-  function t(key) { return i18n[lang]?.[key] || i18n.es[key] || key; }
+  $: t = (key) => i18n[lang]?.[key] || i18n.es[key] || key;
   function toggleLang() {
     lang = lang === 'es' ? 'en' : 'es';
     if (typeof localStorage !== 'undefined') localStorage.setItem(LANG_KEY, lang);
