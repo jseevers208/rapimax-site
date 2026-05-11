@@ -9,5 +9,5 @@ binding = "ASSETS"
 
 [[d1_databases]]
 binding = "DB"
-database_name = "rapimax-db"
-database_id = "" # Fill after: npx wrangler d1 create rapimax-db
+database_name = "rapimax-prod"
+database_id = "80d06894-83c2-4d45-afe7-1f1b1889cf7b"
