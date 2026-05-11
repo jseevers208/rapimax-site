@@ -7,7 +7,8 @@ const routes = {
   '/solicitud': () => import('./FinancingApp.svelte'),
   '/contactanos': () => import('./ContactApp.svelte'),
   '/requisitos': () => import('./RequirementsApp.svelte'),
-  '/servicios': () => import('./ServicesApp.svelte')
+  '/servicios': () => import('./ServicesApp.svelte'),
+  '/mi-solicitud': () => import('./PortalApp.svelte')
 };
 
 if ('scrollRestoration' in history) history.scrollRestoration = 'manual';

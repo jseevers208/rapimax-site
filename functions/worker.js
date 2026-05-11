@@ -10,6 +10,7 @@ import * as calculatorLeadHandler from './api/calculator-lead.js';
 import * as adminHandler from './api/admin.js';
 import * as contentHandler from './api/content.js';
 import * as casesHandler from './api/cases.js';
+import * as portalHandler from './api/portal.js';
 
 export default {
   async fetch(request, env, ctx) {
@@ -48,6 +49,10 @@ export default {
 
       if (path === '/api/cases') {
         return await casesHandler.onRequest(context);
+      }
+
+      if (path === '/api/portal' && method === 'GET') {
+        return await portalHandler.onRequestGet(context);
       }
 
       // Unknown API route

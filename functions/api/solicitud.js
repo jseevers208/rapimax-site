@@ -29,7 +29,11 @@ export async function onRequestPost(context) {
       'spouse_employment_start_date', 'spouse_profession', 'spouse_gross_monthly_income',
       'reference1_name', 'reference1_phone', 'reference1_relationship',
       'reference2_name', 'reference2_phone', 'reference2_relationship',
-      'ip_address', 'user_agent'
+      'ip_address', 'user_agent', 'access_token'
+    ];
+
+    // Generate portal access token
+    const accessToken = Array.from(crypto.getRandomValues(new Uint8Array(24))).map(b => b.toString(16).padStart(2, '0')).join('');
     ];
 
     const ip = request.headers.get('CF-Connecting-IP') || 'unknown';
@@ -41,6 +45,7 @@ export async function onRequestPost(context) {
     }
     snakeData.ip_address = ip;
     snakeData.user_agent = ua;
+    snakeData.access_token = accessToken;
 
     const presentColumns = columns.filter((col) => snakeData[col] !== undefined);
     const placeholders = presentColumns.map(() => '?').join(', ');
@@ -72,7 +77,8 @@ export async function onRequestPost(context) {
               <p><strong>Email:</strong> ${data.personalEmail || 'N/A'}</p>
               <p><strong>Ingreso bruto mensual:</strong> $${data.grossMonthlyIncome || 'N/A'}</p>
               <hr>
-              <p><a href="${env.SITE_URL || 'https://rapimax.co.cr'}/admin">Ver en panel de administración</a></p>
+              <p><a href="${env.SITE_URL || 'https://rapimax-dev.com'}/admin">Ver en panel de administración</a></p>
+              <p><a href="${env.SITE_URL || 'https://rapimax-dev.com'}/mi-solicitud?token=${accessToken}">Ver portal del cliente</a></p>
             `,
           }),
         });
@@ -101,6 +107,7 @@ export async function onRequestPost(context) {
     return corsResponse({
       success: true,
       id: result.meta?.last_row_id,
+      portalUrl: `/mi-solicitud?token=${accessToken}`,
       message: 'Solicitud recibida exitosamente.',
     });
   } catch (err) {

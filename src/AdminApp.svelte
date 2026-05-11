@@ -826,7 +826,63 @@
             <div class="kpi__value">{fmtPct(stats.funnel?.approvedTotal || 0, stats.funnel?.appsTotal || 1)}</div>
             <div class="kpi__label">{t('conversion')}</div>
           </div>
+          <div class="kpi" style="border-color:rgba(213,181,132,.2)">
+            <div class="kpi__value" style="color:#d5b584">{fmtMoney(stats.avgAmount)}</div>
+            <div class="kpi__label">Monto promedio</div>
+          </div>
+          <div class="kpi" style="border-color:rgba(91,143,217,.2)">
+            <div class="kpi__value" style="color:#5b8fd9">{stats.avgResponseHours ? Math.round(stats.avgResponseHours) + 'h' : '—'}</div>
+            <div class="kpi__label">Tiempo respuesta</div>
+          </div>
+          <div class="kpi" style="border-color:rgba(139,92,246,.2)">
+            <div class="kpi__value" style="color:#8b5cf6">{stats.casesOverview?.active || 0}</div>
+            <div class="kpi__label">{t('cases')} activos</div>
+          </div>
         </div>
+
+        <!-- Conversion Funnel Visual -->
+        {#if stats.funnel}
+          <section class="dash-card dash-card--wide" style="margin-bottom:16px">
+            <h3>Embudo de conversión</h3>
+            <div class="conv-funnel">
+              <div class="conv-funnel__step">
+                <div class="conv-funnel__bar" style="width:100%;background:#d5b584"></div>
+                <div class="conv-funnel__label">Leads <strong>{stats.funnel.leadsTotal || 0}</strong></div>
+              </div>
+              <div class="conv-funnel__step">
+                <div class="conv-funnel__bar" style="width:{Math.max(5, ((stats.funnel.appsTotal || 0) / Math.max(stats.funnel.leadsTotal || 1, 1)) * 100)}%;background:#5b8fd9"></div>
+                <div class="conv-funnel__label">Solicitudes <strong>{stats.funnel.appsTotal || 0}</strong> <span class="conv-funnel__pct">{fmtPct(stats.funnel.appsTotal || 0, Math.max(stats.funnel.leadsTotal || 1, 1))}</span></div>
+              </div>
+              <div class="conv-funnel__step">
+                <div class="conv-funnel__bar" style="width:{Math.max(5, ((stats.funnel.approvedTotal || 0) / Math.max(stats.funnel.leadsTotal || 1, 1)) * 100)}%;background:#22c55e"></div>
+                <div class="conv-funnel__label">Aprobadas <strong>{stats.funnel.approvedTotal || 0}</strong> <span class="conv-funnel__pct">{fmtPct(stats.funnel.approvedTotal || 0, Math.max(stats.funnel.leadsTotal || 1, 1))}</span></div>
+              </div>
+              <div class="conv-funnel__step">
+                <div class="conv-funnel__bar" style="width:{Math.max(5, ((stats.funnel.disbursedTotal || 0) / Math.max(stats.funnel.leadsTotal || 1, 1)) * 100)}%;background:#14b8a6"></div>
+                <div class="conv-funnel__label">Desembolsadas <strong>{stats.funnel.disbursedTotal || 0}</strong> <span class="conv-funnel__pct">{fmtPct(stats.funnel.disbursedTotal || 0, Math.max(stats.funnel.leadsTotal || 1, 1))}</span></div>
+              </div>
+            </div>
+          </section>
+        {/if}
+
+        <!-- Monthly Trend -->
+        {#if (stats.monthlyTrend || []).length > 0}
+          <section class="dash-card dash-card--wide" style="margin-bottom:16px">
+            <h3>Tendencia mensual</h3>
+            <div class="monthly-chart">
+              {#each stats.monthlyTrend as m}
+                <div class="monthly-chart__col">
+                  <div class="monthly-chart__bar-wrap">
+                    <div class="monthly-chart__bar" style="height:{Math.max(4, (m.count / Math.max(...stats.monthlyTrend.map(x => x.count), 1)) * 100)}%"></div>
+                  </div>
+                  <div class="monthly-chart__count">{m.count}</div>
+                  <div class="monthly-chart__label">{m.month.slice(5)}</div>
+                  <div class="monthly-chart__vol">{fmtMoney(m.volume)}</div>
+                </div>
+              {/each}
+            </div>
+          </section>
+        {/if}
 
         <div class="dash-grid">
           <!-- Status Funnel -->
@@ -1861,6 +1917,21 @@
   .save-btn:disabled { opacity:.5; }
 
   /* ---- KANBAN ---- */
+  .conv-funnel { display:flex; flex-direction:column; gap:8px; }
+  .conv-funnel__step { position:relative; }
+  .conv-funnel__bar { height:28px; border-radius:6px; opacity:.25; transition:width .4s; }
+  .conv-funnel__label { position:absolute; top:4px; left:12px; font-size:.82rem; color:rgba(255,246,226,.8); }
+  .conv-funnel__label strong { margin-left:6px; }
+  .conv-funnel__pct { font-size:.72rem; color:rgba(255,246,226,.4); margin-left:4px; }
+
+  .monthly-chart { display:flex; gap:8px; align-items:flex-end; height:140px; }
+  .monthly-chart__col { flex:1; display:flex; flex-direction:column; align-items:center; gap:2px; height:100%; }
+  .monthly-chart__bar-wrap { flex:1; width:100%; display:flex; align-items:flex-end; }
+  .monthly-chart__bar { width:100%; background:linear-gradient(to top, #5b8fd9, rgba(91,143,217,.3)); border-radius:4px 4px 0 0; min-height:4px; transition:height .3s; }
+  .monthly-chart__count { font-size:.75rem; font-weight:700; color:#5b8fd9; }
+  .monthly-chart__label { font-size:.7rem; color:rgba(255,246,226,.4); }
+  .monthly-chart__vol { font-size:.65rem; color:rgba(255,246,226,.25); }
+
   .kanban { display:flex; gap:10px; overflow-x:auto; padding-bottom:8px; }
   .kanban__col { min-width:180px; flex:1; max-width:220px; }
   .kanban__col-header { font-size:.75rem; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:rgba(255,246,226,.5); padding:8px 10px; margin-bottom:8px; border-bottom:2px solid; }

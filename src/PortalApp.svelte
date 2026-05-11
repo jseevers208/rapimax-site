@@ -1,0 +1,236 @@
+<script>
+  let token = '';
+  let data = null;
+  let error = '';
+  let loading = true;
+
+  // Get token from URL
+  if (typeof window !== 'undefined') {
+    const params = new URLSearchParams(window.location.search);
+    token = params.get('token') || '';
+  }
+
+  async function loadStatus() {
+    if (!token) { error = 'no-token'; loading = false; return; }
+    try {
+      const res = await fetch(`/api/portal?token=${encodeURIComponent(token)}`);
+      const result = await res.json();
+      if (result.error) { error = result.error; }
+      else { data = result; }
+    } catch { error = 'Error de conexión.'; }
+    loading = false;
+  }
+
+  function fmtDate(d) {
+    if (!d) return '';
+    try {
+      return new Date(d + (d.includes('Z') ? '' : 'Z')).toLocaleDateString('es-CR', { day: '2-digit', month: 'long', year: 'numeric' });
+    } catch { return d; }
+  }
+
+  if (token) loadStatus();
+  else loading = false;
+</script>
+
+<div class="portal">
+  <header class="portal__header">
+    <a href="/" class="portal__brand">
+      <span class="portal__logo">RM</span> RapiMax
+    </a>
+  </header>
+
+  <main class="portal__main">
+    {#if loading}
+      <div class="portal__loading">
+        <div class="portal__spinner"></div>
+        <p>Cargando tu solicitud...</p>
+      </div>
+
+    {:else if error === 'no-token'}
+      <div class="portal__error-card">
+        <div class="portal__error-icon">🔗</div>
+        <h2>Enlace inválido</h2>
+        <p>Este enlace no contiene un token válido. Si recibiste un enlace por correo o WhatsApp, asegurate de copiar la URL completa.</p>
+        <a href="/" class="portal__cta">Ir al sitio de RapiMax</a>
+      </div>
+
+    {:else if error}
+      <div class="portal__error-card">
+        <div class="portal__error-icon">❌</div>
+        <h2>Solicitud no encontrada</h2>
+        <p>No encontramos una solicitud asociada a este enlace. Es posible que el enlace haya expirado o sea incorrecto.</p>
+        <p style="margin-top:12px; font-size:.85rem; opacity:.6">Si creés que esto es un error, contactanos por WhatsApp.</p>
+        <a href="/" class="portal__cta">Ir al sitio de RapiMax</a>
+      </div>
+
+    {:else if data}
+      <!-- Status Banner -->
+      <div class="portal__status-banner" style="border-color:{data.statusInfo.color}">
+        <div class="portal__status-dot" style="background:{data.statusInfo.color}"></div>
+        <div>
+          <h1 class="portal__status-title">{data.statusInfo.title}</h1>
+          <p class="portal__status-desc">{data.statusInfo.desc}</p>
+        </div>
+      </div>
+
+      <!-- Applicant Info -->
+      <div class="portal__card">
+        <div class="portal__card-row">
+          <span class="portal__label">Solicitante</span>
+          <span class="portal__value">{data.application.name || '—'}</span>
+        </div>
+        {#if data.application.idPartial}
+          <div class="portal__card-row">
+            <span class="portal__label">Identificación</span>
+            <span class="portal__value">{data.application.idPartial}</span>
+          </div>
+        {/if}
+        {#if data.application.amount}
+          <div class="portal__card-row">
+            <span class="portal__label">Monto solicitado</span>
+            <span class="portal__value portal__value--highlight">${Number(data.application.amount).toLocaleString()}</span>
+          </div>
+        {/if}
+        {#if data.application.term}
+          <div class="portal__card-row">
+            <span class="portal__label">Plazo</span>
+            <span class="portal__value">{data.application.term} meses</span>
+          </div>
+        {/if}
+        <div class="portal__card-row">
+          <span class="portal__label">Fecha de solicitud</span>
+          <span class="portal__value">{fmtDate(data.application.submittedAt)}</span>
+        </div>
+        <div class="portal__card-row">
+          <span class="portal__label">Última actualización</span>
+          <span class="portal__value">{fmtDate(data.application.updatedAt)}</span>
+        </div>
+      </div>
+
+      <!-- Pipeline -->
+      <div class="portal__card">
+        <h3 class="portal__section-title">Progreso de tu solicitud</h3>
+        <div class="portal__pipeline">
+          {#each data.pipeline as step, i}
+            <div class="portal__step" class:completed={step.completed} class:current={step.current} class:rejected={data.isRejected && step.current}>
+              <div class="portal__step-dot" style="background:{step.completed ? step.color : 'rgba(255,255,255,.1)'}">
+                {#if step.completed && !step.current}
+                  <span class="portal__check">✓</span>
+                {:else if step.current}
+                  <span class="portal__current-dot" style="background:{step.color}"></span>
+                {/if}
+              </div>
+              <span class="portal__step-label" class:active={step.current}>{step.label}</span>
+              {#if i < data.pipeline.length - 1}
+                <div class="portal__step-line" style="background:{step.completed ? step.color : 'rgba(255,255,255,.06)'}"></div>
+              {/if}
+            </div>
+          {/each}
+        </div>
+        {#if data.isRejected}
+          <div class="portal__rejected-badge">No aprobada</div>
+        {/if}
+      </div>
+
+      <!-- Timeline -->
+      {#if (data.timeline || []).length > 0}
+        <div class="portal__card">
+          <h3 class="portal__section-title">Historial</h3>
+          <div class="portal__timeline">
+            {#each data.timeline as event}
+              <div class="portal__timeline-item">
+                <div class="portal__timeline-dot"></div>
+                <div>
+                  <span class="portal__timeline-date">{fmtDate(event.date)}</span>
+                  <span class="portal__timeline-text">Estado actualizado</span>
+                </div>
+              </div>
+            {/each}
+          </div>
+        </div>
+      {/if}
+
+      <!-- Contact -->
+      <div class="portal__card portal__card--contact">
+        <h3 class="portal__section-title">¿Tenés preguntas?</h3>
+        <p style="font-size:.85rem; color:rgba(255,246,226,.5); margin:0 0 16px">Contactanos para información sobre tu solicitud.</p>
+        <div class="portal__contact-btns">
+          <a href="https://wa.me/50600000000?text=Hola RapiMax, quiero consultar sobre mi solicitud" class="portal__contact-btn portal__contact-btn--wa">💬 WhatsApp</a>
+          <a href="tel:+50622223333" class="portal__contact-btn portal__contact-btn--phone">📞 Llamar</a>
+        </div>
+      </div>
+
+      <p class="portal__footer">© {new Date().getFullYear()} Rapi Moto Credit S.A. · 3-101-748267</p>
+    {/if}
+  </main>
+</div>
+
+<style>
+  :global(body) { margin:0; font-family:'Montserrat',-apple-system,system-ui,sans-serif; background:#0a1929; color:#e8e4dc; -webkit-font-smoothing:antialiased; }
+
+  .portal { min-height:100vh; }
+
+  .portal__header { padding:16px 24px; display:flex; align-items:center; border-bottom:1px solid rgba(255,255,255,.06); }
+  .portal__brand { text-decoration:none; color:#d5b584; font-size:1.1rem; font-weight:700; display:flex; align-items:center; gap:8px; }
+  .portal__logo { font-family:'Nordique Pro',sans-serif; font-size:.85rem; border:1.5px solid #d5b584; border-radius:6px; padding:2px 6px; font-weight:700; }
+
+  .portal__main { max-width:520px; margin:0 auto; padding:24px 20px 60px; }
+
+  .portal__loading { text-align:center; padding:80px 0; color:rgba(255,246,226,.4); }
+  .portal__spinner { width:32px; height:32px; border:3px solid rgba(255,255,255,.1); border-top-color:#d5b584; border-radius:50%; animation:spin .8s linear infinite; margin:0 auto 16px; }
+  @keyframes spin { to { transform:rotate(360deg); } }
+
+  .portal__error-card { text-align:center; padding:48px 24px; background:rgba(255,255,255,.03); border:1px solid rgba(255,255,255,.08); border-radius:20px; }
+  .portal__error-icon { font-size:2.5rem; margin-bottom:16px; }
+  .portal__error-card h2 { font-size:1.2rem; margin:0 0 12px; }
+  .portal__error-card p { font-size:.9rem; color:rgba(255,246,226,.5); margin:0; line-height:1.6; }
+  .portal__cta { display:inline-block; margin-top:24px; padding:12px 28px; border-radius:12px; background:linear-gradient(135deg, #d5b584, #c9a36e); color:#0a1929; font-weight:700; text-decoration:none; font-size:.9rem; }
+
+  .portal__status-banner { display:flex; align-items:flex-start; gap:16px; padding:24px; background:rgba(255,255,255,.03); border:1px solid; border-radius:20px; margin-bottom:16px; }
+  .portal__status-dot { width:14px; height:14px; border-radius:50%; flex-shrink:0; margin-top:4px; }
+  .portal__status-title { font-size:1.3rem; font-weight:700; margin:0 0 6px; }
+  .portal__status-desc { font-size:.88rem; color:rgba(255,246,226,.6); margin:0; line-height:1.5; }
+
+  .portal__card { background:rgba(255,255,255,.03); border:1px solid rgba(255,255,255,.06); border-radius:16px; padding:20px; margin-bottom:12px; }
+  .portal__card--contact { text-align:center; }
+  .portal__section-title { font-size:.82rem; text-transform:uppercase; letter-spacing:.06em; color:rgba(255,246,226,.4); margin:0 0 16px; font-weight:600; }
+  .portal__card-row { display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-bottom:1px solid rgba(255,255,255,.04); }
+  .portal__card-row:last-child { border-bottom:none; }
+  .portal__label { font-size:.82rem; color:rgba(255,246,226,.4); }
+  .portal__value { font-size:.9rem; font-weight:600; }
+  .portal__value--highlight { color:#d5b584; font-size:1.05rem; }
+
+  /* Pipeline */
+  .portal__pipeline { display:flex; flex-direction:column; gap:0; }
+  .portal__step { display:flex; align-items:center; gap:12px; position:relative; padding:8px 0; }
+  .portal__step-dot { width:28px; height:28px; border-radius:50%; display:flex; align-items:center; justify-content:center; flex-shrink:0; border:2px solid rgba(255,255,255,.08); }
+  .portal__step.completed .portal__step-dot { border-color:transparent; }
+  .portal__check { color:#fff; font-size:.75rem; font-weight:700; }
+  .portal__current-dot { width:10px; height:10px; border-radius:50%; animation:pulse 2s ease-in-out infinite; }
+  @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.6;transform:scale(.8)} }
+  .portal__step-label { font-size:.82rem; color:rgba(255,246,226,.35); }
+  .portal__step-label.active { color:#fff; font-weight:700; font-size:.88rem; }
+  .portal__step-line { position:absolute; left:13px; top:36px; width:2px; height:16px; }
+  .portal__rejected-badge { display:inline-block; margin-top:12px; padding:6px 16px; border-radius:8px; background:rgba(239,68,68,.12); border:1px solid rgba(239,68,68,.3); color:#ef4444; font-size:.82rem; font-weight:700; }
+
+  /* Timeline */
+  .portal__timeline { display:flex; flex-direction:column; gap:12px; }
+  .portal__timeline-item { display:flex; align-items:center; gap:12px; }
+  .portal__timeline-dot { width:8px; height:8px; border-radius:50%; background:#d5b584; flex-shrink:0; }
+  .portal__timeline-date { font-size:.78rem; color:rgba(255,246,226,.35); margin-right:8px; }
+  .portal__timeline-text { font-size:.82rem; }
+
+  /* Contact */
+  .portal__contact-btns { display:flex; gap:10px; justify-content:center; flex-wrap:wrap; }
+  .portal__contact-btn { padding:12px 24px; border-radius:12px; text-decoration:none; font-weight:600; font-size:.85rem; border:1px solid rgba(255,255,255,.12); color:#e8e4dc; transition:all .2s; }
+  .portal__contact-btn--wa:hover { background:rgba(37,211,102,.12); border-color:rgba(37,211,102,.3); color:#25d366; }
+  .portal__contact-btn--phone:hover { background:rgba(91,143,217,.1); border-color:rgba(91,143,217,.3); color:#5b8fd9; }
+
+  .portal__footer { text-align:center; font-size:.72rem; color:rgba(255,246,226,.2); margin-top:32px; }
+
+  @media (max-width:480px) {
+    .portal__main { padding:16px 16px 48px; }
+    .portal__status-banner { flex-direction:column; gap:12px; }
+    .portal__status-title { font-size:1.1rem; }
+  }
+</style>

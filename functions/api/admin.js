@@ -139,8 +139,41 @@ export async function onRequest(context) {
         `SELECT
           (SELECT COUNT(*) FROM calculator_leads) as leads_total,
           (SELECT COUNT(*) FROM loan_applications) as apps_total,
-          (SELECT COUNT(*) FROM loan_applications WHERE status IN ('aprobada','desembolsada','completada')) as approved_total`
+          (SELECT COUNT(*) FROM loan_applications WHERE status IN ('aprobada','desembolsada','completada')) as approved_total,
+          (SELECT COUNT(*) FROM loan_applications WHERE status = 'desembolsada') as disbursed_total`
       ).first();
+
+      // Monthly applications trend (last 6 months)
+      const monthlyTrend = await env.DB.prepare(
+        `SELECT strftime('%Y-%m', created_at) as month, COUNT(*) as count, COALESCE(SUM(requested_credit_amount), 0) as volume
+         FROM loan_applications WHERE created_at >= datetime('now', '-6 months')
+         GROUP BY strftime('%Y-%m', created_at) ORDER BY month`
+      ).all();
+
+      // Average loan amount
+      const avgAmount = await env.DB.prepare(
+        `SELECT COALESCE(AVG(requested_credit_amount), 0) as avg_amount FROM loan_applications WHERE requested_credit_amount > 0`
+      ).first();
+
+      // Response time: avg hours from created_at to first status change away from 'nueva'
+      const responseTime = await env.DB.prepare(
+        `SELECT AVG((julianday(a.new_time) - julianday(la.created_at)) * 24) as avg_hours
+         FROM loan_applications la
+         JOIN (SELECT record_id, MIN(created_at) as new_time FROM activity_log WHERE record_type = 'applications' AND action = 'status_changed' AND old_value = 'nueva' GROUP BY record_id) a
+         ON la.id = a.record_id`
+      ).first();
+
+      // Cases overview
+      let casesOverview = { total: 0, active: 0, overdue: 0 };
+      try {
+        const co = await env.DB.prepare(
+          `SELECT COUNT(*) as total,
+           SUM(CASE WHEN status NOT IN ('cerrado','desembolsado','rechazado') THEN 1 ELSE 0 END) as active,
+           SUM(CASE WHEN follow_up_date < datetime('now') AND status NOT IN ('cerrado','desembolsado','rechazado') THEN 1 ELSE 0 END) as overdue
+           FROM cases`
+        ).first();
+        if (co) casesOverview = { total: co.total || 0, active: co.active || 0, overdue: co.overdue || 0 };
+      } catch {}
 
       // Attention needed: applications in 'nueva' for 48+ hours
       const attention = await env.DB.prepare(
@@ -161,6 +194,10 @@ export async function onRequest(context) {
         recentActivity: (recentActivity?.results || []).map(rowToCamel),
         leadsByDay: leadsByDay?.results || [],
         funnel: funnel || {},
+        monthlyTrend: monthlyTrend?.results || [],
+        avgAmount: avgAmount?.avg_amount || 0,
+        avgResponseHours: responseTime?.avg_hours || null,
+        casesOverview,
         attention: (attention?.results || []).map(rowToCamel),
       });
     }
