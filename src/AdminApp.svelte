@@ -947,7 +947,9 @@
               {:else}
                 <tr>
                   <th class="sortable" on:click={() => toggleSort('created_at')}>{t('date')}</th>
+                  <th>{t('name')}</th>
                   <th class="sortable" on:click={() => toggleSort('email')}>{t('email')}</th>
+                  <th>{t('phone')}</th>
                   <th>{t('vehicle_type')}</th>
                   <th>{t('value')}</th>
                   <th>{t('down_payment')}</th>
@@ -1001,7 +1003,9 @@
                 {:else}
                   <tr>
                     <td>{fmtShortDate(item.createdAt)}</td>
+                    <td class="cell--name">{item.fullName || '—'}</td>
                     <td>{item.email || '—'}</td>
+                    <td>{item.phone || '—'}</td>
                     <td>{item.vehicleType || '—'}</td>
                     <td>{item.currency === 'CRC' ? '₡' : '$'}{item.vehicleValue ? Number(item.vehicleValue).toLocaleString() : '—'}</td>
                     <td>{item.currency === 'CRC' ? '₡' : '$'}{item.downPayment ? Number(item.downPayment).toLocaleString() : '—'}</td>
