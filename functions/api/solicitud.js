@@ -34,7 +34,6 @@ export async function onRequestPost(context) {
 
     // Generate portal access token
     const accessToken = Array.from(crypto.getRandomValues(new Uint8Array(24))).map(b => b.toString(16).padStart(2, '0')).join('');
-    ];
 
     const ip = request.headers.get('CF-Connecting-IP') || 'unknown';
     const ua = request.headers.get('User-Agent') || 'unknown';
