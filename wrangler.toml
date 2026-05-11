@@ -1,7 +1,11 @@
-# Rapimax — Cloudflare Pages (unified platform)
+# Rapimax — Cloudflare Worker + Assets
 name = "rapimax-site"
 compatibility_date = "2024-12-01"
-pages_build_output_dir = "./dist"
+main = "functions/worker.js"
+
+[assets]
+directory = "./dist"
+binding = "ASSETS"
 
 [[d1_databases]]
 binding = "DB"
