@@ -114,9 +114,30 @@ export async function onRequest(context) {
 
   // --- ALL GET ROUTES (require auth) ---
   if (request.method === 'GET') {
-    if (!checkAdminAuth(request, env)) return errorResponse('No autorizado.', 401);
     const url = new URL(request.url);
     const action = url.searchParams.get('action') || 'list';
+
+    // --- CEDULA IMAGE FROM R2 (supports query-param token for img src) ---
+    if (action === 'cedula_image') {
+      const qToken = url.searchParams.get('token') || '';
+      const adminPassword = env.ADMIN_PASSWORD || 'rapimax-admin-2026';
+      if (!checkAdminAuth(request, env) && qToken !== adminPassword) return errorResponse('No autorizado.', 401);
+      const key = url.searchParams.get('key');
+      if (!key || !key.startsWith('cedulas/')) return errorResponse('Clave inválida.');
+      if (!env.DOCUMENTS) return errorResponse('R2 no configurado.', 503);
+      const obj = await env.DOCUMENTS.get(key);
+      if (!obj) return errorResponse('Imagen no encontrada.', 404);
+      const headers = new Headers({
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+        'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+      });
+      headers.set('Content-Type', obj.httpMetadata?.contentType || 'image/jpeg');
+      headers.set('Cache-Control', 'private, max-age=3600');
+      return new Response(obj.body, { headers });
+    }
+
+    if (!checkAdminAuth(request, env)) return errorResponse('No autorizado.', 401);
 
     // --- DASHBOARD STATS ---
     if (action === 'stats') {
@@ -311,27 +332,6 @@ export async function onRequest(context) {
         activity: (activity?.results || []).map(rowToCamel),
         rapiIdData,
       });
-    }
-
-    // --- CEDULA IMAGE FROM R2 ---
-    if (action === 'cedula_image') {
-      // Accept token from query param (for img src) or header
-      const qToken = url.searchParams.get('token') || '';
-      const adminPassword = env.ADMIN_PASSWORD || 'rapimax-admin-2026';
-      if (!checkAdminAuth(request, env) && qToken !== adminPassword) return errorResponse('No autorizado.', 401);
-      const key = url.searchParams.get('key');
-      if (!key || !key.startsWith('cedulas/')) return errorResponse('Clave inválida.');
-      if (!env.DOCUMENTS) return errorResponse('R2 no configurado.', 503);
-      const obj = await env.DOCUMENTS.get(key);
-      if (!obj) return errorResponse('Imagen no encontrada.', 404);
-      const headers = new Headers({
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-        'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-      });
-      headers.set('Content-Type', obj.httpMetadata?.contentType || 'image/jpeg');
-      headers.set('Cache-Control', 'private, max-age=3600');
-      return new Response(obj.body, { headers });
     }
 
     // --- NOTES FOR RECORD ---
