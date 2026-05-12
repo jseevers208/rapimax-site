@@ -257,6 +257,7 @@
   let detailView = null;
   let detailNotes = [];
   let detailActivity = [];
+  let detailRapiId = null;
   let newNoteText = '';
   let noteSaving = false;
 
@@ -435,13 +436,14 @@
     const result = await api('GET', { action: 'detail', type, id: String(id) });
     if (result) {
       detailView = { type, ...result.record };
+      detailRapiId = result.rapiIdData || null;
       detailNotes = result.notes || [];
       detailActivity = result.activity || [];
     }
     loading = false;
   }
 
-  function closeDetail() { detailView = null; detailNotes = []; detailActivity = []; newNoteText = ''; }
+  function closeDetail() { detailView = null; detailNotes = []; detailActivity = []; detailRapiId = null; newNoteText = ''; }
 
   async function addNote() {
     if (!newNoteText.trim() || !detailView) return;
@@ -1022,14 +1024,41 @@
                 <div><span class="lbl">{t('id_number')}</span><span>{detailView.applicantIdType} {detailView.applicantIdNumber || '—'}</span></div>
                 <div><span class="lbl">{t('phone')}</span><span>{detailView.cellPhone || '—'}</span></div>
                 <div><span class="lbl">{t('email')}</span><span>{detailView.personalEmail || '—'}</span></div>
-                <div><span class="lbl">{t('amount')}</span><span>{fmtMoney(detailView.requestedCreditAmount)}</span></div>
+                <div><span class="lbl">Facilidad crediticia</span><span>{detailView.creditFacilityType || '—'}</span></div>
+                <div><span class="lbl">{t('amount')}</span><span>{detailView.requestedCurrency || 'USD'} {fmtMoney(detailView.requestedCreditAmount)}</span></div>
                 <div><span class="lbl">{t('term')}</span><span>{detailView.requestedTermMonths || '—'} meses</span></div>
                 <div><span class="lbl">Estado civil</span><span>{detailView.maritalStatus || '—'}</span></div>
                 <div><span class="lbl">Nacionalidad</span><span>{detailView.nationality || '—'}</span></div>
                 <div><span class="lbl">Profesión</span><span>{detailView.profession || '—'}</span></div>
                 <div><span class="lbl">Nacimiento</span><span>{detailView.birthDate || '—'}</span></div>
+                <div><span class="lbl">Lugar nacimiento</span><span>{detailView.birthPlace || '—'}</span></div>
+                <div><span class="lbl">Prov. nacimiento</span><span>{detailView.birthProvince || '—'}</span></div>
+                <div><span class="lbl">Cantón nacimiento</span><span>{detailView.birthCanton || '—'}</span></div>
+                <div><span class="lbl">Barrio</span><span>{detailView.neighborhood || '—'}</span></div>
               </div>
             </section>
+            {#if detailRapiId}
+              <section class="detail__section">
+                <h4>⚡ Rapi-ID Check</h4>
+                <div class="cedula-images">
+                  {#if detailRapiId.r2Front}
+                    <div class="cedula-img-box">
+                      <span class="cedula-img-label">Frente</span>
+                      <img src="/api/admin?action=cedula_image&key={encodeURIComponent(detailRapiId.r2Front)}&token={token}" alt="Cédula frente" class="cedula-img" />
+                    </div>
+                  {/if}
+                  {#if detailRapiId.r2Back}
+                    <div class="cedula-img-box">
+                      <span class="cedula-img-label">Reverso</span>
+                      <img src="/api/admin?action=cedula_image&key={encodeURIComponent(detailRapiId.r2Back)}&token={token}" alt="Cédula reverso" class="cedula-img" />
+                    </div>
+                  {/if}
+                </div>
+                <div class="detail__grid" style="margin-top: 8px;">
+                  <div><span class="lbl">Campos detectados</span><span>{detailRapiId.detected || '—'}</span></div>
+                </div>
+              </section>
+            {/if}
             <section class="detail__section">
               <h4>{t('address_info')}</h4>
               <div class="detail__grid">
@@ -1049,6 +1078,7 @@
                 <div><span class="lbl">Inicio laboral</span><span>{detailView.employmentStartDate || '—'}</span></div>
                 <div><span class="lbl">Teléfono trabajo</span><span>{detailView.workPhone || '—'}</span></div>
                 <div><span class="lbl">Email trabajo</span><span>{detailView.workEmail || '—'}</span></div>
+                <div><span class="lbl">Barrio trabajo</span><span>{detailView.workNeighborhood || '—'}</span></div>
               </div>
             </section>
             {#if detailView.spouseFullName}
@@ -1884,6 +1914,12 @@
   .detail__section h4 { font-size:.82rem; text-transform:uppercase; letter-spacing:.06em; color:rgba(255,246,226,.5); margin:0 0 14px; }
   .detail__grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(220px, 1fr)); gap:12px; font-size:.85rem; }
   .detail__grid--full { grid-column:1 / -1; }
+
+  .cedula-images { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  .cedula-img-box { background:rgba(18,41,65,0.03); border-radius:10px; padding:8px; text-align:center; }
+  .cedula-img-label { display:block; font-size:0.7rem; text-transform:uppercase; letter-spacing:0.04em; color:rgba(255,255,255,0.4); margin-bottom:6px; }
+  .cedula-img { width:100%; max-height:280px; object-fit:contain; border-radius:8px; border:1px solid rgba(255,255,255,0.06); }
+  @media (max-width:600px) { .cedula-images { grid-template-columns:1fr; } }
   .lbl { display:block; font-size:.72rem; text-transform:uppercase; letter-spacing:.05em; color:rgba(255,246,226,.35); margin-bottom:2px; }
 
   /* Notes */

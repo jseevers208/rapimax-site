@@ -285,11 +285,53 @@ export async function onRequest(context) {
       if (!row) return errorResponse('No encontrado.', 404);
       const notes = await env.DB.prepare(`SELECT * FROM notes WHERE record_type = ? AND record_id = ? ORDER BY created_at DESC`).bind(type, id).all();
       const activity = await env.DB.prepare(`SELECT * FROM activity_log WHERE record_type = ? AND record_id = ? ORDER BY created_at DESC LIMIT 50`).bind(type, id).all();
+
+      // Look up Rapi-ID scan data from activity log
+      let rapiIdData = null;
+      if (type === 'applications' && row.applicant_id_number) {
+        const idNum = row.applicant_id_number.replace(/[^a-zA-Z0-9]/g, '');
+        const rapiIdLog = await env.DB.prepare(
+          `SELECT new_value FROM activity_log WHERE record_type = 'rapi_id' AND action = 'cedula_scanned' ORDER BY created_at DESC LIMIT 5`
+        ).all();
+        // Find matching entry by ID number
+        for (const entry of (rapiIdLog?.results || [])) {
+          try {
+            const parsed = JSON.parse(entry.new_value);
+            if (parsed.id && parsed.id.replace(/[^a-zA-Z0-9]/g, '') === idNum) {
+              rapiIdData = parsed;
+              break;
+            }
+          } catch {}
+        }
+      }
+
       return corsResponse({
         record: rowToCamel(row),
         notes: (notes?.results || []).map(rowToCamel),
         activity: (activity?.results || []).map(rowToCamel),
+        rapiIdData,
       });
+    }
+
+    // --- CEDULA IMAGE FROM R2 ---
+    if (action === 'cedula_image') {
+      // Accept token from query param (for img src) or header
+      const qToken = url.searchParams.get('token') || '';
+      const adminPassword = env.ADMIN_PASSWORD || 'rapimax-admin-2026';
+      if (!checkAdminAuth(request, env) && qToken !== adminPassword) return errorResponse('No autorizado.', 401);
+      const key = url.searchParams.get('key');
+      if (!key || !key.startsWith('cedulas/')) return errorResponse('Clave inválida.');
+      if (!env.DOCUMENTS) return errorResponse('R2 no configurado.', 503);
+      const obj = await env.DOCUMENTS.get(key);
+      if (!obj) return errorResponse('Imagen no encontrada.', 404);
+      const headers = new Headers({
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+        'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+      });
+      headers.set('Content-Type', obj.httpMetadata?.contentType || 'image/jpeg');
+      headers.set('Cache-Control', 'private, max-age=3600');
+      return new Response(obj.body, { headers });
     }
 
     // --- NOTES FOR RECORD ---
