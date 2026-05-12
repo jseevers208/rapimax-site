@@ -15,6 +15,7 @@ import * as waitlistHandler from './api/waitlist.js';
 import * as lookupHandler from './api/lookup.js';
 import * as filesHandler from './api/files.js';
 import * as rapiIdHandler from './api/rapi-id.js';
+import * as agentHandler from './api/agent.js';
 import { sendDailyDigest, sendWeeklyDigest } from './api/_scheduled.js';
 
 export default {
@@ -74,6 +75,10 @@ export default {
 
       if (path === '/api/rapi-id' && method === 'POST') {
         return await rapiIdHandler.onRequestPost(context);
+      }
+
+      if (path === '/api/agent' && method === 'POST') {
+        return await agentHandler.onRequestPost(context);
       }
 
       // Unknown API route
