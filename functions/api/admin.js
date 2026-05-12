@@ -165,6 +165,15 @@ export async function onRequest(context) {
       return corsResponse({ success: true, message: 'Usuario actualizado.' });
     }
 
+    // --- DELETE USER (super_admin only) ---
+    if (body.action === 'delete_user') {
+      if (authUser.role !== 'super_admin') return errorResponse('Solo super administradores pueden eliminar usuarios.', 403);
+      if (!body.userId) return errorResponse('ID de usuario requerido.');
+      if (body.userId === authUser.id) return errorResponse('No podés eliminarte a vos mismo.');
+      await env.DB.prepare('DELETE FROM admin_users WHERE id = ?').bind(body.userId).run();
+      return corsResponse({ success: true, message: 'Usuario eliminado.' });
+    }
+
     // --- CHANGE OWN PASSWORD ---
     if (body.action === 'change_password') {
       if (!authUser.id || authUser.id === 0) return errorResponse('No disponible en modo legacy.');

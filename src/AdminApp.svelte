@@ -453,6 +453,24 @@
     loadUsers();
   }
 
+  async function deleteUser(userId, name) {
+    if (!confirm(`¿Estás seguro de eliminar al usuario "${name}"? Esta acción no se puede deshacer.`)) return;
+    const result = await api('POST', {}, { action: 'delete_user', userId });
+    if (result?.success) { userMessage = result.message; loadUsers(); }
+    else userMessage = result?.error || 'Error al eliminar usuario.';
+  }
+
+  let resetPwUserId = null;
+  let resetPwValue = '';
+  let resetPwMsg = '';
+
+  async function resetUserPassword() {
+    if (!resetPwValue || resetPwValue.length < 8) { resetPwMsg = 'Mínimo 8 caracteres.'; return; }
+    const result = await api('POST', {}, { action: 'update_user', userId: resetPwUserId, newPassword: resetPwValue });
+    if (result?.success) { resetPwMsg = '✅ Contraseña actualizada.'; resetPwValue = ''; setTimeout(() => { resetPwUserId = null; resetPwMsg = ''; }, 2000); }
+    else resetPwMsg = result?.error || 'Error.';
+  }
+
   function handleLogout() {
     token = ''; isLoggedIn = false; currentUser = null;
     sessionStorage.removeItem('rapimax_admin_token');
@@ -1986,8 +2004,21 @@
                           <td><select value={u.role} on:change={e => changeUserRole(u.id, e.target.value)} class="role-sel"><option value="super_admin">Super Admin</option><option value="admin">Admin</option><option value="viewer">Solo lectura</option></select></td>
                           <td>{#if u.isActive}<span class="active-dot active-dot--on"></span> Activo{:else}<span class="active-dot active-dot--off"></span> Inactivo{/if}</td>
                           <td>{u.lastLogin ? fmtDate(u.lastLogin) : 'Nunca'}</td>
-                          <td><button class="action-btn" on:click={() => toggleUserActive(u.id, u.isActive)}>{u.isActive ? '🚫' : '✅'}</button></td>
+                          <td><button class="action-btn" on:click={() => toggleUserActive(u.id, u.isActive)}>{u.isActive ? '🚫' : '✅'}</button> <button class="action-btn" on:click={() => { resetPwUserId = u.id; resetPwValue = ''; resetPwMsg = ''; }}>🔑</button> <button class="action-btn action-btn--del" on:click={() => deleteUser(u.id, u.name)}>🗑️</button></td>
                         </tr>
+                        {#if resetPwUserId === u.id}
+                          <tr>
+                            <td colspan="6" style="background:rgba(213,181,132,.05); padding:12px;">
+                              <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+                                <span style="font-size:.82rem; color:#d5b584; font-weight:600;">Nueva contraseña para {u.name}:</span>
+                                <input type="password" placeholder="Mín. 8 caracteres" bind:value={resetPwValue} class="user-input" style="flex:1; min-width:180px;" />
+                                <button class="save-btn" on:click={resetUserPassword}>Guardar</button>
+                                <button class="cancel-btn" on:click={() => { resetPwUserId = null; }}>Cancelar</button>
+                                {#if resetPwMsg}<span style="font-size:.8rem; color:#d5b584;">{resetPwMsg}</span>{/if}
+                              </div>
+                            </td>
+                          </tr>
+                        {/if}
                       {/each}
                     </tbody>
                   </table>
@@ -2035,6 +2066,10 @@
   .user-msg { font-size:.82rem; color:#d5b584; margin:8px 0 0; }
   .role-sel { background:rgba(255,255,255,.05); color:#e8e4dc; border:1px solid rgba(255,255,255,.1); border-radius:6px; padding:4px 8px; font-size:.78rem; }
   .row--inactive { opacity:.4; }
+  .action-btn--del { color:#ef4444; }
+  .action-btn--del:hover { background:rgba(239,68,68,.1); }
+  .cancel-btn { padding:8px 16px; border:1px solid rgba(255,255,255,.12); border-radius:8px; background:none; color:rgba(255,246,226,.5); font-size:.82rem; cursor:pointer; font-family:inherit; }
+  .cancel-btn:hover { border-color:rgba(255,255,255,.25); color:#fff; }
 
   /* Case from detail */
   .case-create-inline { background:rgba(213,181,132,.05); border:1px solid rgba(213,181,132,.15); border-radius:12px; padding:16px; }
