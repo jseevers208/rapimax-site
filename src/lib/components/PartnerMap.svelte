@@ -486,30 +486,13 @@
     // If it matched a specific partner, zoom in closer and highlight it
     if (origin.partnerIndex !== undefined) {
       centerMapOn(origin.coords, 14);
-      hoveredIndex = origin.partnerIndex;
-      // Show popup for this partner
-      if (mapLibreMap && mapInstance) {
-        const loc = locations[origin.partnerIndex];
-        showPartnerPopup(loc, origin.coords);
-      }
+      // Wait for flyTo animation to finish, then show popup
+      setTimeout(() => {
+        setHoveredPartner(origin.partnerIndex);
+      }, 900);
     } else {
       centerMapOn(origin.coords, SEARCH_ZOOM);
     }
-  }
-
-  function showPartnerPopup(loc, coords) {
-    if (!mapInstance || !L) return;
-    if (popupInstance) popupInstance.remove();
-    const html = `
-      <div style="font-family:system-ui,sans-serif;max-width:220px">
-        <strong style="font-size:14px;display:block;margin-bottom:4px">${loc.name}</strong>
-        <span style="font-size:12px;color:#666;display:block;margin-bottom:6px">${loc.address}</span>
-        ${loc.phone ? `<a href="tel:${loc.phone.replace(/\s/g,'')}" style="font-size:12px;color:#122941;font-weight:600;text-decoration:none">📞 ${loc.phone}</a>` : ''}
-      </div>`;
-    popupInstance = L.popup({ offset: [0, -18], closeButton: true, className: 'partner-popup' })
-      .setLatLng(coords)
-      .setContent(html)
-      .openOn(mapInstance);
   }
 
   function handleLocateMe() {
@@ -635,8 +618,7 @@
       mapInstance.on('click', (event) => {
         const locationIndex = getHoveredLocationIndex(event);
         if (locationIndex !== null) {
-          const loc = locations[locationIndex];
-          showPartnerPopup(loc, loc.coords);
+          setHoveredPartner(locationIndex);
         }
       });
 
