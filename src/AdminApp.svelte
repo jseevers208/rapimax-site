@@ -307,6 +307,7 @@
   let casesTotalPages = 1;
   let casesLoading = false;
   let caseDetail = null;
+  let showCreateCaseFromDetail = false;
   let caseNotes = [];
   let caseActivity = [];
   let caseNewNote = '';
@@ -789,6 +790,45 @@
     loadCases();
   }
 
+  async function createCaseFromApplication() {
+    if (!detailView) return;
+    const d = detailView;
+    // Load admin users for assignment if not loaded
+    if (!adminUsers.length) {
+      try {
+        const result = await api('GET', { action: 'users' });
+        adminUsers = result.users || [];
+      } catch {}
+    }
+    newCase = {
+      fullName: d.applicantFullName || '',
+      email: d.personalEmail || '',
+      phone: d.cellPhone || '',
+      source: 'solicitud',
+      status: 'lead',
+      assignedTo: '',
+      priority: d.priority || 'normal',
+      followUpDate: '',
+      nextSteps: '',
+      estimatedValue: d.requestedCreditAmount ? `${d.requestedCurrency || 'USD'} ${fmtMoney(d.requestedCreditAmount)}` : '',
+      linkedApplicationId: d.id,
+      linkedContactId: null,
+      linkedLeadIds: []
+    };
+    showCreateCaseFromDetail = true;
+  }
+
+  async function confirmCreateCaseFromDetail() {
+    if (!newCase.fullName && !newCase.email) return;
+    await fetch('/api/cases', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ action: 'create', ...newCase }),
+    });
+    showCreateCaseFromDetail = false;
+    newCase = { fullName: '', email: '', phone: '', source: 'manual', status: 'lead', assignedTo: '', priority: 'normal', followUpDate: '', nextSteps: '', estimatedValue: '', linkedApplicationId: null, linkedContactId: null, linkedLeadIds: [] };
+  }
+
   let lookupTimeout;
   async function handleLookup() {
     clearTimeout(lookupTimeout);
@@ -1106,6 +1146,7 @@
             {#if detailView.personalEmail || detailView.email}
               <button class="action-btn action-btn--email" on:click={() => openEmail(detailView.personalEmail || detailView.email)}>✉️ {t('send_email')}</button>
             {/if}
+            <button class="action-btn action-btn--case" on:click={createCaseFromApplication}>🗂️ Crear caso</button>
           </div>
         </div>
 
@@ -1223,6 +1264,50 @@
               </div>
             </section>
           </div>
+        {/if}
+
+        <!-- Create Case from Detail -->
+        {#if showCreateCaseFromDetail}
+          <section class="detail__section case-create-inline">
+            <h4>🗂️ Crear caso desde esta solicitud</h4>
+            <div class="detail__grid">
+              <div><span class="lbl">Nombre</span><span>{newCase.fullName}</span></div>
+              <div><span class="lbl">Email</span><span>{newCase.email}</span></div>
+              <div><span class="lbl">Teléfono</span><span>{newCase.phone}</span></div>
+              <div><span class="lbl">Valor</span><span>{newCase.estimatedValue}</span></div>
+            </div>
+            <div class="case-create-fields">
+              <label>
+                <span class="lbl">Asignar a</span>
+                <select bind:value={newCase.assignedTo} class="user-input">
+                  <option value="">Sin asignar</option>
+                  {#each adminUsers.filter(u => u.isActive) as u}
+                    <option value={u.email}>{u.name} ({u.role})</option>
+                  {/each}
+                </select>
+              </label>
+              <label>
+                <span class="lbl">Prioridad</span>
+                <select bind:value={newCase.priority} class="user-input">
+                  <option value="normal">Normal</option>
+                  <option value="alta">Alta</option>
+                  <option value="urgente">Urgente</option>
+                </select>
+              </label>
+              <label>
+                <span class="lbl">Seguimiento</span>
+                <input type="date" bind:value={newCase.followUpDate} class="user-input" />
+              </label>
+              <label class="full-width">
+                <span class="lbl">Próximos pasos</span>
+                <input type="text" bind:value={newCase.nextSteps} placeholder="Ej: Verificar documentos, llamar al cliente..." class="user-input" />
+              </label>
+            </div>
+            <div style="display:flex; gap:10px; margin-top:12px;">
+              <button class="save-btn" on:click={confirmCreateCaseFromDetail}>✅ Crear caso</button>
+              <button class="cancel-btn" on:click={() => { showCreateCaseFromDetail = false; }}>Cancelar</button>
+            </div>
+          </section>
         {/if}
 
         <!-- Notes -->
@@ -1950,6 +2035,17 @@
   .user-msg { font-size:.82rem; color:#d5b584; margin:8px 0 0; }
   .role-sel { background:rgba(255,255,255,.05); color:#e8e4dc; border:1px solid rgba(255,255,255,.1); border-radius:6px; padding:4px 8px; font-size:.78rem; }
   .row--inactive { opacity:.4; }
+
+  /* Case from detail */
+  .case-create-inline { background:rgba(213,181,132,.05); border:1px solid rgba(213,181,132,.15); border-radius:12px; padding:16px; }
+  .case-create-inline h4 { color:#d5b584; }
+  .case-create-fields { display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; margin-top:12px; }
+  .case-create-fields label { display:flex; flex-direction:column; gap:4px; }
+  .case-create-fields .lbl { font-size:.7rem; text-transform:uppercase; color:rgba(255,255,255,.4); }
+  .case-create-fields .full-width { grid-column:1 / -1; }
+  .action-btn--case { background:rgba(213,181,132,.1); border-color:rgba(213,181,132,.3); color:#d5b584; }
+  .action-btn--case:hover { background:rgba(213,181,132,.2); }
+  @media (max-width:600px) { .case-create-fields { grid-template-columns:1fr; } }
   .login__lang:hover { color:rgba(255,246,226,.6); }
 
   /* ---- HEADER ---- */
