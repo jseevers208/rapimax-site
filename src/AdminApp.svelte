@@ -232,6 +232,14 @@
   // State
   // ============================================
   let token = (typeof sessionStorage !== 'undefined' && sessionStorage.getItem('rapimax_admin_token')) || '';
+  let loginError = '';
+  let loginEmail = '';
+  let loginMode = 'login'; // 'login' | 'reset_request' | 'reset_confirm'
+  let resetMessage = '';
+  let resetToken = '';
+  let newPassword = '';
+  let currentUser = null; // { id, email, role, name }
+
   // Restore user from session
   try { currentUser = JSON.parse(sessionStorage.getItem('rapimax_admin_user') || 'null'); } catch { currentUser = null; }
   // Check URL for password reset token
@@ -242,13 +250,6 @@
   }
   let isLoggedIn = !!token;
   let passwordInput = '';
-  let loginError = '';
-  let loginEmail = '';
-  let loginMode = 'login'; // 'login' | 'reset_request' | 'reset_confirm'
-  let resetMessage = '';
-  let resetToken = '';
-  let newPassword = '';
-  let currentUser = null; // { id, email, role, name }
 
   let activeTab = 'dashboard';
   let data = [];
