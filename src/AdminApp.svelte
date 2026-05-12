@@ -232,9 +232,23 @@
   // State
   // ============================================
   let token = (typeof sessionStorage !== 'undefined' && sessionStorage.getItem('rapimax_admin_token')) || '';
+  // Restore user from session
+  try { currentUser = JSON.parse(sessionStorage.getItem('rapimax_admin_user') || 'null'); } catch { currentUser = null; }
+  // Check URL for password reset token
+  if (typeof window !== 'undefined') {
+    const urlParams = new URLSearchParams(window.location.search);
+    const rt = urlParams.get('reset');
+    if (rt) { resetToken = rt; loginMode = 'reset_confirm'; window.history.replaceState({}, '', '/admin/'); }
+  }
   let isLoggedIn = !!token;
   let passwordInput = '';
   let loginError = '';
+  let loginEmail = '';
+  let loginMode = 'login'; // 'login' | 'reset_request' | 'reset_confirm'
+  let resetMessage = '';
+  let resetToken = '';
+  let newPassword = '';
+  let currentUser = null; // { id, email, role, name }
 
   let activeTab = 'dashboard';
   let data = [];
@@ -267,7 +281,7 @@
   let settingsSaved = false;
 
   // CMS sub-tab
-  let settingsTab = 'settings'; // 'settings' | 'content' | 'partners'
+  let settingsTab = 'settings'; // 'settings' | 'content' | 'partners' | 'users'
 
   // Content editor
   let contentBlocks = [];
@@ -350,26 +364,97 @@
   async function handleLogin() {
     loginError = '';
     try {
+      const body = loginEmail
+        ? { action: 'login', email: loginEmail, password: passwordInput }
+        : { password: passwordInput };
       const res = await fetch('/api/admin', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ password: passwordInput }),
+        body: JSON.stringify(body),
       });
       const result = await res.json();
       if (result.success) {
         token = result.token;
+        currentUser = result.user || null;
         sessionStorage.setItem('rapimax_admin_token', token);
+        if (currentUser) sessionStorage.setItem('rapimax_admin_user', JSON.stringify(currentUser));
         isLoggedIn = true;
         loadDashboard();
       } else {
-        loginError = t('login_error');
+        loginError = result.error || t('login_error');
       }
     } catch { loginError = 'Error de conexión.'; }
   }
 
+  async function handleResetRequest() {
+    loginError = ''; resetMessage = '';
+    if (!loginEmail) { loginError = 'Ingresá tu email.'; return; }
+    try {
+      const res = await fetch('/api/admin', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'reset_password_request', email: loginEmail }),
+      });
+      const result = await res.json();
+      resetMessage = result.message || 'Revisá tu email.';
+    } catch { loginError = 'Error de conexión.'; }
+  }
+
+  async function handleResetPassword() {
+    loginError = ''; resetMessage = '';
+    if (!newPassword || newPassword.length < 8) { loginError = 'La contraseña debe tener al menos 8 caracteres.'; return; }
+    try {
+      const res = await fetch('/api/admin', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'reset_password', token: resetToken, newPassword }),
+      });
+      const result = await res.json();
+      if (result.success) { resetMessage = result.message; loginMode = 'login'; resetToken = ''; newPassword = ''; }
+      else loginError = result.error || 'Error al restablecer.';
+    } catch { loginError = 'Error de conexión.'; }
+  }
+
+  // User management state
+  let adminUsers = [];
+  let newUserForm = { email: '', password: '', name: '', role: 'admin' };
+  let userMessage = '';
+
+  async function loadUsers() {
+    userMessage = '';
+    try {
+      const result = await api('GET', { action: 'users' });
+      adminUsers = result.users || [];
+    } catch { adminUsers = []; }
+  }
+
+  async function createUser() {
+    userMessage = '';
+    if (!newUserForm.email || !newUserForm.password || !newUserForm.name) { userMessage = 'Todos los campos son requeridos.'; return; }
+    try {
+      const result = await api('POST', {}, { action: 'create_user', ...newUserForm });
+      if (result.success) {
+        userMessage = result.message;
+        newUserForm = { email: '', password: '', name: '', role: 'admin' };
+        loadUsers();
+      } else userMessage = result.error || 'Error al crear usuario.';
+    } catch { userMessage = 'Error de conexión.'; }
+  }
+
+  async function toggleUserActive(userId, isActive) {
+    await api('POST', {}, { action: 'update_user', userId, isActive: !isActive });
+    loadUsers();
+  }
+
+  async function changeUserRole(userId, role) {
+    await api('POST', {}, { action: 'update_user', userId, role });
+    loadUsers();
+  }
+
   function handleLogout() {
-    token = ''; isLoggedIn = false;
+    token = ''; isLoggedIn = false; currentUser = null;
     sessionStorage.removeItem('rapimax_admin_token');
+    sessionStorage.removeItem('rapimax_admin_user');
   }
 
   // ============================================
@@ -593,6 +678,7 @@
     settingsTab = tab;
     if (tab === 'content' && !contentBlocks.length) loadContent();
     if (tab === 'partners' && !partners.length) loadPartners();
+    if (tab === 'users' && !adminUsers.length) loadUsers();
   }
 
   // ============================================
@@ -760,11 +846,34 @@
     <div class="login__card">
       <div class="login__brand"><svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 937.11 141.63' class="login__logo-svg"><g><g><path fill='currentColor' d='M336.31,0h35.56C391.39,0,407.28,14.63,407.28,34.15s-13.69,31.63-26.91,34.15l24.39,41.86h-16.68l-22.82-40.44h-13.53v40.44h-15.42V0ZM371.87,55.86c11.96,0,19.98-9.76,19.98-21.72s-8.03-20.3-19.98-20.3h-20.14v42.02h20.14Z'/><path fill='currentColor' d='M416.72,70.81c0-22.5,18.25-40.6,40.6-40.6s40.44,18.1,40.44,40.6v39.34h-15.42v-12.43c-3.78,7.71-13.85,13.69-25.02,13.69-22.35,0-40.6-18.1-40.6-40.6ZM482.5,70.81c0-14.32-10.54-25.65-25.02-25.65s-25.34,11.33-25.34,25.65,11.02,25.65,25.34,25.65,25.02-11.33,25.02-25.65Z'/><path fill='currentColor' d='M553.94,30.21c22.35,0,40.6,18.1,40.6,40.6s-18.25,40.6-40.6,40.6c-10.54,0-19.04-4.41-24.86-11.33v41.54h-15.58v-70.81c0-22.5,18.1-40.6,40.44-40.6ZM579.12,70.81c0-14.32-10.7-25.65-25.18-25.65s-25.18,11.33-25.18,25.65,11.02,25.65,25.18,25.65,25.18-11.33,25.18-25.65Z'/><path fill='currentColor' d='M609.49,11.17c0-5.35,4.09-9.44,9.44-9.44s9.28,4.09,9.28,9.44-4.09,9.44-9.28,9.44-9.44-4.09-9.44-9.44ZM611.22,31.47h15.42v78.68h-15.42V31.47Z'/><path fill='currentColor' d='M756.3,0v110.15h-15.42V34.62l-34.15,75.53h-13.22l-34.15-75.53v75.53h-15.42V0h15.42l40.76,87.97L740.88,0h15.42Z'/><path fill='currentColor' d='M771.25,70.81c0-22.5,18.25-40.6,40.6-40.6s40.44,18.1,40.44,40.6v39.34h-15.42v-12.43c-3.78,7.71-13.85,13.69-25.02,13.69-22.35,0-40.6-18.1-40.6-40.6ZM837.03,70.81c0-14.32-10.54-25.65-25.02-25.65s-25.34,11.33-25.34,25.65,11.02,25.65,25.34,25.65,25.02-11.33,25.02-25.65Z'/><path fill='currentColor' d='M919.49,110.15l-20.3-28.17-20.3,28.17h-17.78l29.27-40.91-26.91-37.77h17.47l18.1,25.18,18.41-25.18h17.47l-26.91,37.77,29.11,40.91h-17.62Z'/></g><g><path fill='currentColor' d='M109.63,111.41h-21.98L27.86,51.57c-2.51-2.51-5.71-2.46-7.86-1.57-2.15.89-4.45,3.11-4.45,6.66v54.74H0v-54.74c0-9.38,5.39-17.44,14.05-21.03,8.67-3.59,18.17-1.7,24.8,4.94l19.41,19.43,31.98-31.95c2.51-2.51,2.46-5.71,1.57-7.86-.89-2.15-3.11-4.45-6.66-4.45H0V.19h85.15c9.38,0,17.44,5.38,21.03,14.05,3.59,8.67,1.69,18.17-4.94,24.8l-31.98,31.95,40.37,40.4Z'/><path fill='currentColor' d='M235.77,111.56h-15.79v-18.36c0-2.24-.87-4.34-2.46-5.93l-21.72-21.71-21.72,21.71c-1.58,1.58-2.46,3.69-2.46,5.93v18.36h-15.79v-12.74c0-7.68,0-14.94,5.79-20.72l23.36-23.35-38.16-38.19c-1.7-1.71-3.57-1.3-4.53-.9-.95.4-2.56,1.43-2.56,3.84v91.81h-15.29V19.5c0-8.02,4.6-14.9,12.01-17.97,7.41-3.06,15.53-1.45,21.2,4.22l38.16,38.19L233.91,5.76c5.67-5.68,13.8-7.3,21.21-4.23,7.41,3.07,12.01,9.95,12.01,17.97l-.04,91.76h-15.3l.05-91.76c0-2.41-1.61-3.44-2.57-3.84-.96-.4-2.82-.81-4.53.9l-38.13,38.19,23.36,23.35c5.79,5.78,5.79,13.04,5.79,20.72v12.74Z'/></g></g></svg></div>
       <h1>{t('login_title')}</h1>
-      <form on:submit|preventDefault={handleLogin}>
-        <input type="password" placeholder={t('login_placeholder')} bind:value={passwordInput} class="login__input" autofocus />
-        {#if loginError}<p class="login__error">{loginError}</p>{/if}
-        <button type="submit" class="login__btn">{t('login_btn')}</button>
-      </form>
+
+      {#if loginMode === 'login'}
+        <form on:submit|preventDefault={handleLogin}>
+          <input type="email" placeholder="Email" bind:value={loginEmail} class="login__input" autofocus />
+          <input type="password" placeholder={t('login_placeholder')} bind:value={passwordInput} class="login__input" style="margin-top:10px" />
+          {#if loginError}<p class="login__error">{loginError}</p>{/if}
+          <button type="submit" class="login__btn">{t('login_btn')}</button>
+        </form>
+        <button class="login__link" on:click={() => { loginMode = 'reset_request'; loginError = ''; resetMessage = ''; }}>¿Olvidaste tu contraseña?</button>
+      {:else if loginMode === 'reset_request'}
+        <form on:submit|preventDefault={handleResetRequest}>
+          <p class="login__subtitle">Ingresá tu email para recibir un enlace de recuperación.</p>
+          <input type="email" placeholder="Email" bind:value={loginEmail} class="login__input" autofocus />
+          {#if loginError}<p class="login__error">{loginError}</p>{/if}
+          {#if resetMessage}<p class="login__success">{resetMessage}</p>{/if}
+          <button type="submit" class="login__btn">Enviar enlace</button>
+        </form>
+        <button class="login__link" on:click={() => { loginMode = 'login'; loginError = ''; resetMessage = ''; }}>← Volver al inicio de sesión</button>
+      {:else if loginMode === 'reset_confirm'}
+        <form on:submit|preventDefault={handleResetPassword}>
+          <p class="login__subtitle">Ingresá tu nueva contraseña (mínimo 8 caracteres).</p>
+          <input type="password" placeholder="Nueva contraseña" bind:value={newPassword} class="login__input" autofocus />
+          {#if loginError}<p class="login__error">{loginError}</p>{/if}
+          {#if resetMessage}<p class="login__success">{resetMessage}</p>{/if}
+          <button type="submit" class="login__btn">Restablecer contraseña</button>
+        </form>
+        <button class="login__link" on:click={() => { loginMode = 'login'; loginError = ''; resetMessage = ''; }}>← Volver al inicio de sesión</button>
+      {/if}
       <button class="login__lang" on:click={toggleLang}>{lang === 'es' ? 'English' : 'Español'}</button>
     </div>
   </div>
@@ -778,6 +887,7 @@
     </div>
     <div class="header__right">
       <button class="header__lang" on:click={toggleLang}>{lang === 'es' ? 'EN' : 'ES'}</button>
+      {#if currentUser?.name}<span class="header__user">{currentUser.name}</span>{/if}
       <button class="header__logout" on:click={handleLogout}>{t('logout')}</button>
     </div>
   </header>
@@ -1526,6 +1636,9 @@
           <button class="cms-tab" class:active={settingsTab === 'settings'} on:click={() => switchSettingsTab('settings')}>⚙️ {t('site_settings')}</button>
           <button class="cms-tab" class:active={settingsTab === 'content'} on:click={() => switchSettingsTab('content')}>📝 {t('content_editor')}</button>
           <button class="cms-tab" class:active={settingsTab === 'partners'} on:click={() => switchSettingsTab('partners')}>📍 {t('partners')}</button>
+          {#if currentUser?.role === 'super_admin' || !currentUser}
+            <button class="cms-tab" class:active={settingsTab === 'users'} on:click={() => switchSettingsTab('users')}>👥 Usuarios</button>
+          {/if}
         </div>
 
         <!-- SETTINGS TAB -->
@@ -1753,6 +1866,49 @@
               {/if}
             {/if}
           </section>
+        {:else if settingsTab === 'users'}
+          <section class="settings-section">
+            <h3>👥 Gestión de usuarios</h3>
+            <div class="user-create-form">
+              <h4>Crear nuevo usuario</h4>
+              <div class="user-form-grid">
+                <input type="text" placeholder="Nombre completo" bind:value={newUserForm.name} class="user-input" />
+                <input type="email" placeholder="Email" bind:value={newUserForm.email} class="user-input" />
+                <input type="password" placeholder="Contraseña (mín. 8 caracteres)" bind:value={newUserForm.password} class="user-input" />
+                <select bind:value={newUserForm.role} class="user-input">
+                  <option value="admin">Admin</option>
+                  <option value="super_admin">Super Admin</option>
+                  <option value="viewer">Solo lectura</option>
+                </select>
+              </div>
+              {#if userMessage}<p class="user-msg">{userMessage}</p>{/if}
+              <button class="save-btn" on:click={createUser}>Crear usuario</button>
+            </div>
+            <div class="users-list" style="margin-top:24px;">
+              <h4>Usuarios registrados ({adminUsers.length})</h4>
+              {#if adminUsers.length === 0}
+                <p class="empty" style="padding:20px 0">No hay usuarios registrados.</p>
+              {:else}
+                <div class="table-wrap">
+                  <table class="table">
+                    <thead><tr><th>Nombre</th><th>Email</th><th>Rol</th><th>Estado</th><th>Último acceso</th><th>Acciones</th></tr></thead>
+                    <tbody>
+                      {#each adminUsers as u}
+                        <tr class:row--inactive={!u.isActive}>
+                          <td class="cell--name">{u.name}</td>
+                          <td>{u.email}</td>
+                          <td><select value={u.role} on:change={e => changeUserRole(u.id, e.target.value)} class="role-sel"><option value="super_admin">Super Admin</option><option value="admin">Admin</option><option value="viewer">Solo lectura</option></select></td>
+                          <td>{#if u.isActive}<span class="active-dot active-dot--on"></span> Activo{:else}<span class="active-dot active-dot--off"></span> Inactivo{/if}</td>
+                          <td>{u.lastLogin ? fmtDate(u.lastLogin) : 'Nunca'}</td>
+                          <td><button class="action-btn" on:click={() => toggleUserActive(u.id, u.isActive)}>{u.isActive ? '🚫' : '✅'}</button></td>
+                        </tr>
+                      {/each}
+                    </tbody>
+                  </table>
+                </div>
+              {/if}
+            </div>
+          </section>
         {/if}
       {/if}
     {/if}
@@ -1778,7 +1934,21 @@
   .login__btn { width:100%; padding:16px; border:none; border-radius:14px; background:linear-gradient(135deg, #d5b584, #c9a36e); color:#0a1929; font-weight:700; font-size:1rem; cursor:pointer; margin-top:16px; transition:transform .15s; }
   .login__btn:active { transform:scale(.98); }
   .login__error { color:#ef4444; font-size:.85rem; margin:8px 0 0; }
+  .login__success { color:#22c55e; font-size:.85rem; margin:8px 0 0; }
+  .login__link { background:none; border:none; color:rgba(255,246,226,.4); font-size:.82rem; cursor:pointer; margin-top:12px; transition:color .2s; padding:0; }
+  .login__link:hover { color:#d5b584; }
+  .login__subtitle { font-size:.85rem; color:rgba(255,246,226,.45); margin:0 0 16px; line-height:1.5; }
   .login__lang { background:none; border:none; color:rgba(255,246,226,.35); cursor:pointer; margin-top:20px; font-size:.8rem; }
+
+  /* User management */
+  .user-create-form { background:rgba(255,255,255,.03); border-radius:12px; padding:20px; border:1px solid rgba(255,255,255,.06); }
+  .user-create-form h4 { margin:0 0 12px; font-size:.9rem; color:#d5b584; }
+  .user-form-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:12px; }
+  .user-input { padding:10px 14px; border:1px solid rgba(255,255,255,.1); border-radius:8px; background:rgba(255,255,255,.05); color:#fff; font-size:.88rem; outline:none; }
+  .user-input:focus { border-color:rgba(213,181,132,.4); }
+  .user-msg { font-size:.82rem; color:#d5b584; margin:8px 0 0; }
+  .role-sel { background:rgba(255,255,255,.05); color:#e8e4dc; border:1px solid rgba(255,255,255,.1); border-radius:6px; padding:4px 8px; font-size:.78rem; }
+  .row--inactive { opacity:.4; }
   .login__lang:hover { color:rgba(255,246,226,.6); }
 
   /* ---- HEADER ---- */
@@ -1789,6 +1959,7 @@
   .header__badge { font-size:.65rem; font-weight:700; text-transform:uppercase; letter-spacing:.12em; padding:4px 10px; background:rgba(213,181,132,.12); border:1px solid rgba(213,181,132,.2); border-radius:6px; color:#d5b584; }
   .header__right { display:flex; align-items:center; gap:10px; }
   .header__lang { background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.1); border-radius:8px; color:rgba(255,246,226,.6); padding:6px 14px; cursor:pointer; font-size:.8rem; font-weight:600; }
+  .header__user { font-size:.78rem; color:rgba(255,246,226,.4); margin-right:8px; }
   .header__logout { background:none; border:1px solid rgba(255,255,255,.12); border-radius:8px; color:rgba(255,246,226,.5); padding:6px 16px; cursor:pointer; font-size:.8rem; }
   .header__logout:hover { border-color:rgba(255,255,255,.25); color:#fff; }
 

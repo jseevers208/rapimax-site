@@ -1,4 +1,5 @@
-import { corsResponse, handleOptions, errorResponse, checkAdminAuth, rowToCamel } from './_helpers.js';
+import { corsResponse, handleOptions, errorResponse, checkAdminAuth, rowToCamel,
+  hashPassword, generateSalt, verifyPassword, createToken, verifyToken, generateResetToken } from './_helpers.js';
 import { notifyStatusChange } from './_whatsapp.js';
 
 export async function onRequestOptions() { return handleOptions(); }
@@ -6,23 +7,178 @@ export async function onRequestOptions() { return handleOptions(); }
 const TABLE_MAP = { applications: 'loan_applications', contacts: 'contact_messages', leads: 'calculator_leads' };
 const STATUS_LIST = ['nueva', 'en-proceso', 'contactada', 'documentos', 'en-revision', 'aprobada', 'rechazada', 'desembolsada', 'completada'];
 
+// Helper: get JWT secret (uses ADMIN_PASSWORD or fallback)
+function getSecret(env) { return env.ADMIN_PASSWORD || 'rapimax-admin-2026'; }
+
+// Helper: verify JWT from Authorization header, returns user payload or null
+async function authenticateRequest(request, env) {
+  const authHeader = request.headers.get('Authorization') || '';
+  const token = authHeader.replace('Bearer ', '');
+  if (!token) return null;
+  // Try JWT first
+  const payload = await verifyToken(token, getSecret(env));
+  if (payload) return payload;
+  // Legacy: plain password match (backwards compat during migration)
+  const adminPassword = env.ADMIN_PASSWORD || 'rapimax-admin-2026';
+  if (token === adminPassword) return { id: 0, email: 'legacy', role: 'super_admin', name: 'Admin' };
+  return null;
+}
+
 export async function onRequest(context) {
   const { request, env, ctx } = context;
   if (request.method === 'OPTIONS') return handleOptions();
 
-  // --- LOGIN ---
+  // --- POST ROUTES ---
   if (request.method === 'POST') {
     let body;
     try { body = await request.json(); } catch { return errorResponse('Datos inválidos.', 400); }
 
+    // --- LOGIN (email + password) ---
     if (body.action === 'login' || !body.action) {
-      const pw = env.ADMIN_PASSWORD || 'rapimax-admin-2026';
-      if (body.password === pw) return corsResponse({ success: true, token: pw });
-      return errorResponse('Contraseña incorrecta.', 401);
+      // Support legacy password-only login during migration
+      if (body.password && !body.email) {
+        const pw = env.ADMIN_PASSWORD || 'rapimax-admin-2026';
+        if (body.password === pw) {
+          const token = await createToken({ id: 0, email: 'legacy', role: 'super_admin', name: 'Admin (legacy)' }, getSecret(env));
+          return corsResponse({ success: true, token, user: { id: 0, email: 'legacy', role: 'super_admin', name: 'Admin (legacy)' } });
+        }
+        return errorResponse('Contraseña incorrecta.', 401);
+      }
+
+      // New email + password login
+      if (!body.email || !body.password) return errorResponse('Email y contraseña son requeridos.');
+      const email = body.email.toLowerCase().trim();
+      const user = await env.DB.prepare('SELECT * FROM admin_users WHERE email = ? AND is_active = 1').bind(email).first();
+      if (!user) return errorResponse('Credenciales incorrectas.', 401);
+      const valid = await verifyPassword(body.password, user.password_hash, user.salt);
+      if (!valid) return errorResponse('Credenciales incorrectas.', 401);
+      // Update last login
+      await env.DB.prepare("UPDATE admin_users SET last_login = datetime('now') WHERE id = ?").bind(user.id).run();
+      const token = await createToken({ id: user.id, email: user.email, role: user.role, name: user.name }, getSecret(env));
+      return corsResponse({ success: true, token, user: { id: user.id, email: user.email, role: user.role, name: user.name } });
     }
 
-    // Authenticated POST actions
-    if (!checkAdminAuth(request, env)) return errorResponse('No autorizado.', 401);
+    // --- SETUP: Create first admin user (requires ADMIN_PASSWORD) ---
+    if (body.action === 'setup_admin') {
+      const setupPw = env.ADMIN_PASSWORD || 'rapimax-admin-2026';
+      if (body.setupKey !== setupPw) return errorResponse('Clave de configuración incorrecta.', 401);
+      // Check if any users exist
+      const count = await env.DB.prepare('SELECT COUNT(*) as c FROM admin_users').first();
+      if (count && count.c > 0) return errorResponse('Ya existen usuarios administradores.');
+      if (!body.email || !body.password || !body.name) return errorResponse('Email, contraseña y nombre son requeridos.');
+      const salt = generateSalt();
+      const hash = await hashPassword(body.password, salt);
+      await env.DB.prepare(
+        'INSERT INTO admin_users (email, password_hash, salt, name, role) VALUES (?, ?, ?, ?, ?)'
+      ).bind(body.email.toLowerCase().trim(), hash, salt, body.name, 'super_admin').run();
+      return corsResponse({ success: true, message: 'Primer usuario administrador creado.' });
+    }
+
+    // --- PASSWORD RESET REQUEST ---
+    if (body.action === 'reset_password_request') {
+      if (!body.email) return errorResponse('Email es requerido.');
+      const email = body.email.toLowerCase().trim();
+      const user = await env.DB.prepare('SELECT * FROM admin_users WHERE email = ? AND is_active = 1').bind(email).first();
+      // Always return success to prevent email enumeration
+      if (!user) return corsResponse({ success: true, message: 'Si el email existe, recibirás un enlace de recuperación.' });
+      const resetToken = generateResetToken();
+      const expires = new Date(Date.now() + 60 * 60 * 1000).toISOString(); // 1 hour
+      await env.DB.prepare("UPDATE admin_users SET reset_token = ?, reset_expires = ? WHERE id = ?").bind(resetToken, expires, user.id).run();
+      // Send reset email via Resend
+      if (env.RESEND_API_KEY) {
+        const resetUrl = `${new URL(request.url).origin}/admin/?reset=${resetToken}`;
+        try {
+          await fetch('https://api.resend.com/emails', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${env.RESEND_API_KEY}` },
+            body: JSON.stringify({
+              from: env.EMAIL_FROM || 'RapiMax <notificaciones@rapimax-dev.com>',
+              to: [email],
+              subject: 'RapiMax — Restablecer contraseña',
+              html: `<div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:32px;">
+                <h2 style="color:#122941;">Restablecer contraseña</h2>
+                <p>Recibimos una solicitud para restablecer tu contraseña del panel de administración de RapiMax.</p>
+                <p><a href="${resetUrl}" style="display:inline-block;padding:12px 28px;background:#122941;color:#d5b584;text-decoration:none;border-radius:8px;font-weight:bold;">Restablecer contraseña</a></p>
+                <p style="font-size:0.85em;color:#888;">Este enlace expira en 1 hora. Si no solicitaste este cambio, ignorá este email.</p>
+              </div>`
+            })
+          });
+        } catch (e) { console.error('Reset email error:', e); }
+      }
+      return corsResponse({ success: true, message: 'Si el email existe, recibirás un enlace de recuperación.' });
+    }
+
+    // --- RESET PASSWORD (with token) ---
+    if (body.action === 'reset_password') {
+      if (!body.token || !body.newPassword) return errorResponse('Token y nueva contraseña son requeridos.');
+      if (body.newPassword.length < 8) return errorResponse('La contraseña debe tener al menos 8 caracteres.');
+      const user = await env.DB.prepare(
+        "SELECT * FROM admin_users WHERE reset_token = ? AND reset_expires > datetime('now') AND is_active = 1"
+      ).bind(body.token).first();
+      if (!user) return errorResponse('Token inválido o expirado.', 401);
+      const salt = generateSalt();
+      const hash = await hashPassword(body.newPassword, salt);
+      await env.DB.prepare(
+        "UPDATE admin_users SET password_hash = ?, salt = ?, reset_token = NULL, reset_expires = NULL, updated_at = datetime('now') WHERE id = ?"
+      ).bind(hash, salt, user.id).run();
+      return corsResponse({ success: true, message: 'Contraseña actualizada exitosamente.' });
+    }
+
+    // --- All other POST actions require auth ---
+    const authUser = await authenticateRequest(request, env);
+    if (!authUser) return errorResponse('No autorizado.', 401);
+
+    // --- CREATE USER (super_admin only) ---
+    if (body.action === 'create_user') {
+      if (authUser.role !== 'super_admin') return errorResponse('Solo super administradores pueden crear usuarios.', 403);
+      if (!body.email || !body.password || !body.name) return errorResponse('Email, contraseña y nombre son requeridos.');
+      if (body.password.length < 8) return errorResponse('La contraseña debe tener al menos 8 caracteres.');
+      const email = body.email.toLowerCase().trim();
+      const existing = await env.DB.prepare('SELECT id FROM admin_users WHERE email = ?').bind(email).first();
+      if (existing) return errorResponse('Ya existe un usuario con ese email.');
+      const salt = generateSalt();
+      const hash = await hashPassword(body.password, salt);
+      const role = ['super_admin', 'admin', 'viewer'].includes(body.role) ? body.role : 'admin';
+      await env.DB.prepare(
+        'INSERT INTO admin_users (email, password_hash, salt, name, role) VALUES (?, ?, ?, ?, ?)'
+      ).bind(email, hash, salt, body.name.trim(), role).run();
+      return corsResponse({ success: true, message: `Usuario ${email} creado como ${role}.` });
+    }
+
+    // --- UPDATE USER (super_admin only) ---
+    if (body.action === 'update_user') {
+      if (authUser.role !== 'super_admin') return errorResponse('Solo super administradores pueden modificar usuarios.', 403);
+      if (!body.userId) return errorResponse('ID de usuario requerido.');
+      const updates = []; const binds = [];
+      if (body.name) { updates.push('name = ?'); binds.push(body.name.trim()); }
+      if (body.role && ['super_admin', 'admin', 'viewer'].includes(body.role)) { updates.push('role = ?'); binds.push(body.role); }
+      if (typeof body.isActive === 'boolean' || typeof body.isActive === 'number') { updates.push('is_active = ?'); binds.push(body.isActive ? 1 : 0); }
+      if (body.newPassword && body.newPassword.length >= 8) {
+        const salt = generateSalt();
+        const hash = await hashPassword(body.newPassword, salt);
+        updates.push('password_hash = ?', 'salt = ?'); binds.push(hash, salt);
+      }
+      if (!updates.length) return errorResponse('Nada que actualizar.');
+      updates.push("updated_at = datetime('now')");
+      binds.push(body.userId);
+      await env.DB.prepare(`UPDATE admin_users SET ${updates.join(', ')} WHERE id = ?`).bind(...binds).run();
+      return corsResponse({ success: true, message: 'Usuario actualizado.' });
+    }
+
+    // --- CHANGE OWN PASSWORD ---
+    if (body.action === 'change_password') {
+      if (!authUser.id || authUser.id === 0) return errorResponse('No disponible en modo legacy.');
+      if (!body.currentPassword || !body.newPassword) return errorResponse('Contraseña actual y nueva son requeridas.');
+      if (body.newPassword.length < 8) return errorResponse('La nueva contraseña debe tener al menos 8 caracteres.');
+      const user = await env.DB.prepare('SELECT * FROM admin_users WHERE id = ?').bind(authUser.id).first();
+      if (!user) return errorResponse('Usuario no encontrado.', 404);
+      const valid = await verifyPassword(body.currentPassword, user.password_hash, user.salt);
+      if (!valid) return errorResponse('Contraseña actual incorrecta.', 401);
+      const salt = generateSalt();
+      const hash = await hashPassword(body.newPassword, salt);
+      await env.DB.prepare("UPDATE admin_users SET password_hash = ?, salt = ?, updated_at = datetime('now') WHERE id = ?").bind(hash, salt, authUser.id).run();
+      return corsResponse({ success: true, message: 'Contraseña actualizada.' });
+    }
 
     // --- ADD NOTE ---
     if (body.action === 'add_note') {
@@ -121,7 +277,8 @@ export async function onRequest(context) {
     if (action === 'cedula_image') {
       const qToken = url.searchParams.get('token') || '';
       const adminPassword = env.ADMIN_PASSWORD || 'rapimax-admin-2026';
-      if (!checkAdminAuth(request, env) && qToken !== adminPassword) return errorResponse('No autorizado.', 401);
+      const jwtUser = await authenticateRequest(request, env);
+      if (!jwtUser && qToken !== adminPassword) return errorResponse('No autorizado.', 401);
       const key = url.searchParams.get('key');
       if (!key || !key.startsWith('cedulas/')) return errorResponse('Clave inválida.');
       if (!env.DOCUMENTS) return errorResponse('R2 no configurado.', 503);
@@ -137,7 +294,15 @@ export async function onRequest(context) {
       return new Response(obj.body, { headers });
     }
 
-    if (!checkAdminAuth(request, env)) return errorResponse('No autorizado.', 401);
+    if (!await authenticateRequest(request, env)) return errorResponse('No autorizado.', 401);
+
+    // --- LIST ADMIN USERS (super_admin only) ---
+    if (action === 'users') {
+      const authUser = await authenticateRequest(request, env);
+      if (authUser.role !== 'super_admin') return errorResponse('Solo super administradores pueden ver usuarios.', 403);
+      const rows = await env.DB.prepare('SELECT id, email, name, role, is_active, last_login, created_at FROM admin_users ORDER BY created_at ASC').all();
+      return corsResponse({ users: (rows?.results || []).map(rowToCamel) });
+    }
 
     // --- DASHBOARD STATS ---
     if (action === 'stats') {

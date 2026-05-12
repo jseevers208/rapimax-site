@@ -24,8 +24,61 @@ export function errorResponse(message, status = 400) {
 export function checkAdminAuth(request, env) {
   const authHeader = request.headers.get('Authorization') || '';
   const token = authHeader.replace('Bearer ', '');
+  // Support both legacy password and new JWT tokens
   const adminPassword = env.ADMIN_PASSWORD || 'rapimax-admin-2026';
-  return token === adminPassword;
+  if (token === adminPassword) return true;
+  // JWT verification happens in admin.js for new auth
+  return false;
+}
+
+// --- Password Hashing (PBKDF2-SHA256, CF Workers compatible) ---
+export async function hashPassword(password, salt) {
+  const enc = new TextEncoder();
+  const keyMaterial = await crypto.subtle.importKey('raw', enc.encode(password), 'PBKDF2', false, ['deriveBits']);
+  const bits = await crypto.subtle.deriveBits({ name: 'PBKDF2', salt: enc.encode(salt), iterations: 100000, hash: 'SHA-256' }, keyMaterial, 256);
+  return btoa(String.fromCharCode(...new Uint8Array(bits)));
+}
+
+export function generateSalt() {
+  const arr = new Uint8Array(16);
+  crypto.getRandomValues(arr);
+  return btoa(String.fromCharCode(...arr));
+}
+
+export async function verifyPassword(password, hash, salt) {
+  const computed = await hashPassword(password, salt);
+  return computed === hash;
+}
+
+// --- JWT-like Token (HMAC-SHA256) ---
+export async function createToken(payload, secret) {
+  const enc = new TextEncoder();
+  const header = btoa(JSON.stringify({ alg: 'HS256', typ: 'JWT' }));
+  const body = btoa(JSON.stringify({ ...payload, iat: Date.now(), exp: Date.now() + 24 * 60 * 60 * 1000 }));
+  const key = await crypto.subtle.importKey('raw', enc.encode(secret), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
+  const sig = await crypto.subtle.sign('HMAC', key, enc.encode(`${header}.${body}`));
+  return `${header}.${body}.${btoa(String.fromCharCode(...new Uint8Array(sig)))}`;
+}
+
+export async function verifyToken(token, secret) {
+  try {
+    const enc = new TextEncoder();
+    const [header, body, sig] = token.split('.');
+    if (!header || !body || !sig) return null;
+    const key = await crypto.subtle.importKey('raw', enc.encode(secret), { name: 'HMAC', hash: 'SHA-256' }, false, ['verify']);
+    const sigBytes = Uint8Array.from(atob(sig), c => c.charCodeAt(0));
+    const valid = await crypto.subtle.verify('HMAC', key, sigBytes, enc.encode(`${header}.${body}`));
+    if (!valid) return null;
+    const payload = JSON.parse(atob(body));
+    if (payload.exp && payload.exp < Date.now()) return null;
+    return payload;
+  } catch { return null; }
+}
+
+export function generateResetToken() {
+  const arr = new Uint8Array(32);
+  crypto.getRandomValues(arr);
+  return Array.from(arr, b => b.toString(16).padStart(2, '0')).join('');
 }
 
 export function camelToSnake(str) {
