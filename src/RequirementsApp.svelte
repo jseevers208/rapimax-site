@@ -171,15 +171,12 @@
       <section class="requirements-cta" aria-labelledby="requirements-cta-title">
         <div class="requirements-cta__panel">
           <p class="requirements-cta__label" id="requirements-cta-title">Siguiente paso</p>
-          <button
-            type="button"
+          <a
             class="btn primary requirements-cta__button"
-            disabled
-            aria-disabled="true"
-            title="Próximamente"
+            href="/solicitud"
           >
             Aplicá en minutos y obtené respuesta en menos de 1 hora.
-          </button>
+          </a>
         </div>
       </section>
     </div>

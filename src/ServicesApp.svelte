@@ -329,15 +329,12 @@
       <section class="services-cta" aria-labelledby="services-cta-title">
         <div class="services-cta__panel">
           <p class="services-cta__label" id="services-cta-title">Aplicación rápida</p>
-          <button
-            type="button"
+          <a
             class="btn primary services-cta__button"
-            disabled
-            aria-disabled="true"
-            title="Próximamente"
+            href="/solicitud"
           >
             Aplicá en minutos y obtené respuesta en menos de una hora.
-          </button>
+          </a>
         </div>
       </section>
     </div>

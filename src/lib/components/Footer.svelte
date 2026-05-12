@@ -40,11 +40,10 @@
     <div class="footer-contact">
       <span class="footer-title">Contáctanos</span>
       <a href="tel:+50671996622">+506 7199-6622</a>
-      <a class="email-link" href="mailto:hola@rapimax.co.cr">hola@rapimax.co.cr</a>
+      <a class="email-link" href="mailto:info@rapimax-dev.com">info@rapimax-dev.com</a>
       <div class="social-icons" aria-label="Redes sociales">
-        <a href="https://www.facebook.com"  aria-label="Facebook"  target="_blank" rel="noreferrer">FB</a>
-        <a href="https://www.instagram.com" aria-label="Instagram" target="_blank" rel="noreferrer">IG</a>
-        <a href="https://www.linkedin.com"  aria-label="LinkedIn"  target="_blank" rel="noreferrer">IN</a>
+        <a href="https://www.instagram.com/rapimaxcr" aria-label="Instagram" target="_blank" rel="noreferrer">IG</a>
+        <a href="https://wa.me/50686991253?text=Hola%20RapiMax" aria-label="WhatsApp" target="_blank" rel="noreferrer">WA</a>
       </div>
     </div>
     <div class="footer-links">
