@@ -1,4 +1,20 @@
-﻿export const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+﻿export const CREDIT_FACILITY_OPTIONS = [
+  { value: 'credito-vehicular', label: 'Crédito Vehicular' },
+  { value: 'credito-motocicleta', label: 'Crédito para Motocicleta' },
+  { value: 'leasing-vehicular', label: 'Leasing Vehicular' },
+  { value: 'credito-equipo', label: 'Crédito para Equipo de Transporte' },
+  { value: 'refinanciamiento', label: 'Refinanciamiento Vehicular' },
+  { value: 'credito-flota', label: 'Crédito para Flota Empresarial' },
+  { value: 'credito-usado', label: 'Crédito Vehículo Usado' },
+  { value: 'otro', label: 'Otro' }
+];
+
+export const CURRENCY_OPTIONS = [
+  { value: 'USD', label: 'USD ($)' },
+  { value: 'CRC', label: 'CRC (₡)' }
+];
+
+export const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export const ID_TYPE_OPTIONS = [
   { value: 'cedula', label: 'Cédula' },

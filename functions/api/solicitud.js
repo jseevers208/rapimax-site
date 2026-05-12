@@ -15,14 +15,15 @@ export async function onRequestPost(context) {
     }
 
     const columns = [
-      'credit_facility_type', 'requested_credit_amount', 'requested_term_months',
+      'credit_facility_type', 'requested_currency', 'requested_credit_amount', 'requested_term_months',
       'applicant_id_type', 'applicant_id_number', 'applicant_full_name',
-      'applicant_gender', 'marital_status', 'birth_place', 'birth_location',
-      'birth_date', 'nationality', 'profession', 'location', 'landline_phone',
+      'applicant_gender', 'marital_status', 'birth_place', 'birth_country',
+      'birth_province', 'birth_canton', 'birth_date', 'nationality', 'profession',
+      'neighborhood', 'landline_phone',
       'cell_phone', 'personal_email', 'home_address', 'home_country',
       'home_province', 'home_canton', 'residence_type', 'housing_payment',
       'exact_home_address', 'employer_name', 'occupation', 'gross_monthly_income',
-      'employment_start_date', 'business_activity', 'work_location', 'work_phone',
+      'employment_start_date', 'business_activity', 'work_neighborhood', 'work_phone',
       'work_fax', 'work_email', 'work_address', 'work_country', 'work_province',
       'work_canton', 'specific_work_address', 'spouse_id_type', 'spouse_id_number',
       'spouse_full_name', 'spouse_gender', 'spouse_nationality', 'spouse_birth_place',

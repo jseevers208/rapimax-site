@@ -2,6 +2,8 @@
   import SiteLayout from './lib/components/SiteLayout.svelte';
   import {
     COSTA_RICA_GEOGRAPHY,
+    CREDIT_FACILITY_OPTIONS,
+    CURRENCY_OPTIONS,
     EMAIL_REGEX,
     FINANCING_STEPS,
     GENDER_OPTIONS,
@@ -18,11 +20,11 @@
   const makeField = (name, label, type = 'text', config = {}) => ({ name, label, type, ...config });
 
   const createInitialAnswers = () => ({
-    creditFacilityType: '', requestedCreditAmount: '', requestedTermMonths: '', applicantIdType: '', applicantIdNumber: '',
-    applicantFullName: '', applicantGender: '', maritalStatus: '', birthPlace: '', birthLocation: '', birthDate: '',
-    nationality: '', profession: '', location: '', landlinePhone: '', cellPhone: '', personalEmail: '', homeAddress: '',
+    creditFacilityType: '', requestedCurrency: 'USD', requestedCreditAmount: '', requestedTermMonths: '', applicantIdType: '', applicantIdNumber: '',
+    applicantFullName: '', applicantGender: '', maritalStatus: '', birthPlace: '', birthCountry: COUNTRY_DEFAULT, birthProvince: '', birthCanton: '', birthDate: '',
+    nationality: '', profession: '', neighborhood: '', landlinePhone: '', cellPhone: '', personalEmail: '', homeAddress: '',
     homeCountry: COUNTRY_DEFAULT, homeProvince: '', homeCanton: '', residenceType: '', housingPayment: '', exactHomeAddress: '',
-    employerName: '', occupation: '', grossMonthlyIncome: '', employmentStartDate: '', businessActivity: '', workLocation: '',
+    employerName: '', occupation: '', grossMonthlyIncome: '', employmentStartDate: '', businessActivity: '', workNeighborhood: '',
     workPhone: '', workFax: '', workEmail: '', workAddress: '', workCountry: COUNTRY_DEFAULT, workProvince: '', workCanton: '',
     specificWorkAddress: '', spouseIdType: '', spouseIdNumber: '', spouseFullName: '', spouseGender: '', spouseNationality: '',
     spouseBirthPlace: '', spouseEmploymentStartDate: '', spouseProfession: '', spouseGrossMonthlyIncome: '',
@@ -34,9 +36,10 @@
       {
         columns: 2,
         fields: [
-          makeField('creditFacilityType', 'Tipo de facilidad crediticia', 'text', { full: true, placeholder: 'Tipo de facilidad crediticia', requiredMessage: 'Ingresá el tipo de facilidad crediticia.' }),
-          makeField('requestedCreditAmount', 'Monto del crédito solicitado', 'number', { placeholder: '25000', min: '0', step: '0.01', inputmode: 'decimal', invalidMessage: 'Ingresá un monto de crédito válido.' }),
-          makeField('requestedTermMonths', 'Plazo solicitado', 'int', { placeholder: '84', min: '1', step: '1', inputmode: 'numeric', invalidMessage: 'Ingresá un plazo solicitado válido en meses.' })
+          makeField('creditFacilityType', 'Tipo de facilidad crediticia', 'select', { full: true, options: CREDIT_FACILITY_OPTIONS, requiredMessage: 'Seleccioná el tipo de facilidad crediticia.' }),
+          makeField('requestedCurrency', 'Moneda', 'select', { options: CURRENCY_OPTIONS }),
+          makeField('requestedCreditAmount', 'Monto solicitado', 'number', { placeholder: '25000', min: '0', step: '0.01', inputmode: 'decimal', invalidMessage: 'Ingresá un monto de crédito válido.' }),
+          makeField('requestedTermMonths', 'Plazo solicitado (meses)', 'int', { placeholder: '84', min: '1', max: '84', step: '1', inputmode: 'numeric', invalidMessage: 'Ingresá un plazo válido (1–84 meses).' })
         ]
       },
       {
@@ -48,7 +51,9 @@
           makeField('applicantGender', 'Sexo', 'radio', { options: GENDER_OPTIONS, requiredMessage: 'Seleccioná el sexo del solicitante.', compact: true }),
           makeField('maritalStatus', 'Estado civil', 'select', { options: MARITAL_STATUS_OPTIONS, requiredMessage: 'Seleccioná el estado civil.' }),
           makeField('birthPlace', 'Lugar de nacimiento', 'text', { placeholder: 'Lugar de nacimiento', requiredMessage: 'Ingresá el lugar de nacimiento.' }),
-          makeField('birthLocation', 'País / Provincia / Cantón', 'text', { placeholder: 'País / Provincia / Cantón', requiredMessage: 'Ingresá país / provincia / cantón de nacimiento.' }),
+          makeField('birthCountry', 'País de nacimiento', 'select', { options: [{ value: COUNTRY_DEFAULT, label: COUNTRY_DEFAULT }] }),
+          makeField('birthProvince', 'Provincia de nacimiento', 'select', { options: PROVINCE_OPTIONS.map((p) => ({ value: p, label: p })), resetField: 'birthCanton', requiredMessage: 'Seleccioná la provincia de nacimiento.' }),
+          makeField('birthCanton', 'Cantón de nacimiento', 'select', { getOptions: (currentAnswers) => getCantons(currentAnswers.birthProvince), requiredMessage: 'Seleccioná el cantón de nacimiento.' }),
           makeField('birthDate', 'Fecha de nacimiento', 'date', { requiredMessage: 'Seleccioná la fecha de nacimiento.', futureMessage: 'La fecha de nacimiento no puede estar en el futuro.' }),
           makeField('nationality', 'Nacionalidad', 'text', { placeholder: 'Nacionalidad', requiredMessage: 'Ingresá la nacionalidad.' }),
           makeField('profession', 'Profesión / Oficio', 'text', { full: true, placeholder: 'Profesión / Oficio', requiredMessage: 'Ingresá la profesión u oficio.' })
@@ -57,7 +62,7 @@
       {
         columns: 2,
         fields: [
-          makeField('location', 'Localización', 'text', { full: true, placeholder: 'Localización', requiredMessage: 'Ingresá la localización.' }),
+          makeField('neighborhood', 'Barrio / Señas adicionales', 'text', { full: true, placeholder: 'Barrio, urbanización o señas adicionales', requiredMessage: 'Ingresá el barrio o señas adicionales.' }),
           makeField('landlinePhone', 'Teléfono fijo', 'tel', { placeholder: 'Teléfono fijo', optional: true }),
           makeField('cellPhone', 'Celular', 'tel', { placeholder: 'Celular', requiredMessage: 'Ingresá el celular.' }),
           makeField('personalEmail', 'Email personal', 'email', { full: true, placeholder: 'Email personal', requiredMessage: 'Ingresá el email personal.', invalidMessage: 'Ingresá un email personal válido.' }),
@@ -80,7 +85,7 @@
           makeField('grossMonthlyIncome', 'Ingresos Bruto Mensual $', 'number', { placeholder: 'Ingresos Bruto Mensual $', min: '0', step: '0.01', inputmode: 'decimal', invalidMessage: 'Ingresá el ingreso bruto mensual.' }),
           makeField('employmentStartDate', 'Fecha de Ingreso', 'date', { requiredMessage: 'Seleccioná la fecha de ingreso.', futureMessage: 'La fecha de ingreso no puede estar en el futuro.' }),
           makeField('businessActivity', 'Actividad Empresarial', 'text', { full: true, placeholder: 'Actividad Empresarial', requiredMessage: 'Ingresá la actividad empresarial.' }),
-          makeField('workLocation', 'Localización Trabajo', 'text', { full: true, placeholder: 'Localización Trabajo', requiredMessage: 'Ingresá la localización de trabajo.' }),
+          makeField('workNeighborhood', 'Barrio / Señas del trabajo', 'text', { full: true, placeholder: 'Barrio, urbanización o señas del lugar de trabajo', requiredMessage: 'Ingresá el barrio o señas del trabajo.' }),
           makeField('workPhone', 'Teléfono', 'tel', { placeholder: 'Teléfono', requiredMessage: 'Ingresá el teléfono de trabajo.' }),
           makeField('workFax', 'Fax', 'tel', { placeholder: 'Fax', optional: true }),
           makeField('workEmail', 'Email', 'email', { full: true, placeholder: 'Email', requiredMessage: 'Ingresá el email laboral.', invalidMessage: 'Ingresá un email laboral válido.' }),
@@ -134,9 +139,13 @@
   const isBlank = (value) => (value ?? '').trim().length === 0;
   const getFieldOptions = (field) => field.getOptions ? field.getOptions(answers).map((value) => ({ value, label: value })) : field.options ?? [];
   const getOptionLabel = (options, value) => options.find((option) => option.value === value)?.label ?? value;
-  const formatMoney = (value) => Number.isFinite(Number(value)) && Number(value) > 0
-    ? new Intl.NumberFormat('es-CR', { style: 'currency', currency: 'USD', minimumFractionDigits: 0, maximumFractionDigits: 2 }).format(Number(value))
-    : '';
+  const formatMoney = (value, currency) => {
+    if (!Number.isFinite(Number(value)) || Number(value) <= 0) return '';
+    const cur = currency || answers.requestedCurrency || 'USD';
+    return new Intl.NumberFormat('es-CR', {
+      style: 'currency', currency: cur, minimumFractionDigits: 0, maximumFractionDigits: 2
+    }).format(Number(value));
+  };
   const isFutureDate = (value) => {
     if (!value) return false;
     const selectedDate = new Date(`${value}T00:00:00`);
@@ -184,6 +193,7 @@
     }
     if (field.type === 'int') {
       if (!Number.isInteger(Number(value)) || Number(value) <= 0) return field.invalidMessage ?? `Ingresá ${field.label.toLowerCase()} válido.`;
+      if (field.max && Number(value) > Number(field.max)) return field.invalidMessage ?? `El valor máximo es ${field.max}.`;
     }
     if (field.type === 'date') {
       if (isBlank(value)) return field.requiredMessage ?? `Seleccioná ${field.label.toLowerCase()}.`;
@@ -361,6 +371,7 @@
                               <input
                                 type={field.type === 'int' ? 'number' : field.type}
                                 min={field.min}
+                                max={field.max}
                                 step={field.step}
                                 inputmode={field.inputmode}
                                 placeholder={field.placeholder}
@@ -416,11 +427,11 @@
               <div class="result-hero">
                 <p class="result-hero__eyebrow">Resumen final</p>
                 <strong>{answers.applicantFullName}</strong>
-                <span>{formatMoney(answers.requestedCreditAmount)} · {answers.requestedTermMonths} meses · {answers.employerName}</span>
+                <span>{formatMoney(answers.requestedCreditAmount, answers.requestedCurrency)} · {answers.requestedTermMonths} meses · {answers.employerName}</span>
               </div>
 
               <div class="result-grid">
-                <article class="result-card"><span>Monto solicitado</span><strong>{formatMoney(answers.requestedCreditAmount)}</strong></article>
+                <article class="result-card"><span>Monto solicitado</span><strong>{formatMoney(answers.requestedCreditAmount, answers.requestedCurrency)}</strong></article>
                 <article class="result-card"><span>Plazo solicitado</span><strong>{answers.requestedTermMonths} meses</strong></article>
                 <article class="result-card"><span>Estado civil</span><strong>{getOptionLabel(MARITAL_STATUS_OPTIONS, answers.maritalStatus)}</strong></article>
                 <article class="result-card"><span>Referencias cargadas</span><strong>2 familiares</strong></article>
