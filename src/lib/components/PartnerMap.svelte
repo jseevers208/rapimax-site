@@ -203,28 +203,38 @@
       return null;
     }
 
+    // 1. Try postal code / province number
     const digits = normalized.replace(/\D/g, '');
     if (digits) {
       const province = searchOrigins.find(
         (origin) => origin.kind === 'postal' && origin.tokens[0] === digits[0]
       );
-
-      if (province) {
-        return province;
-      }
+      if (province) return province;
     }
 
+    // 2. Try exact province match
     const exactMatch = searchOrigins.find((origin) =>
       origin.tokens.some((token) => normalized === token)
     );
+    if (exactMatch) return exactMatch;
 
-    if (exactMatch) {
-      return exactMatch;
+    // 3. Try partial province match
+    const partialProvince = searchOrigins.find((origin) =>
+      origin.tokens.some((token) => normalized.includes(token))
+    );
+    if (partialProvince) return partialProvince;
+
+    // 4. Try partner name or address match
+    const partnerMatch = locations.findIndex((loc) => {
+      const nameNorm = normalizeText(loc.name);
+      const addrNorm = normalizeText(loc.address);
+      return nameNorm.includes(normalized) || addrNorm.includes(normalized) || normalized.includes(nameNorm);
+    });
+    if (partnerMatch >= 0) {
+      return { coords: locations[partnerMatch].coords, label: locations[partnerMatch].name, partnerIndex: partnerMatch };
     }
 
-    return (
-      searchOrigins.find((origin) => origin.tokens.some((token) => normalized.includes(token))) ?? null
-    );
+    return null;
   }
 
   function createPartnerPinSvg(fill, dot) {
@@ -264,8 +274,8 @@
       <div class="partner-tooltip-card">
         <strong>${location.name}</strong>
         <span>${location.address}</span>
-        <span>${location.phone}</span>
-        <span>${location.email}</span>
+        ${location.phone ? `<span>${location.phone}</span>` : ''}
+        ${location.email ? `<span>${location.email}</span>` : ''}
       </div>
     `;
   }
@@ -462,14 +472,44 @@
     }
   }
 
+  let searchNoResults = false;
+
   function handleSearchSubmit() {
+    searchNoResults = false;
     const origin = resolveSearchOrigin(searchQuery);
 
     if (!origin) {
+      if (searchQuery.trim()) searchNoResults = true;
       return;
     }
 
-    centerMapOn(origin.coords, SEARCH_ZOOM);
+    // If it matched a specific partner, zoom in closer and highlight it
+    if (origin.partnerIndex !== undefined) {
+      centerMapOn(origin.coords, 14);
+      hoveredIndex = origin.partnerIndex;
+      // Show popup for this partner
+      if (mapLibreMap && mapInstance) {
+        const loc = locations[origin.partnerIndex];
+        showPartnerPopup(loc, origin.coords);
+      }
+    } else {
+      centerMapOn(origin.coords, SEARCH_ZOOM);
+    }
+  }
+
+  function showPartnerPopup(loc, coords) {
+    if (!mapInstance || !L) return;
+    if (popupInstance) popupInstance.remove();
+    const html = `
+      <div style="font-family:system-ui,sans-serif;max-width:220px">
+        <strong style="font-size:14px;display:block;margin-bottom:4px">${loc.name}</strong>
+        <span style="font-size:12px;color:#666;display:block;margin-bottom:6px">${loc.address}</span>
+        ${loc.phone ? `<a href="tel:${loc.phone.replace(/\s/g,'')}" style="font-size:12px;color:#122941;font-weight:600;text-decoration:none">📞 ${loc.phone}</a>` : ''}
+      </div>`;
+    popupInstance = L.popup({ offset: [0, -18], closeButton: true, className: 'partner-popup' })
+      .setLatLng(coords)
+      .setContent(html)
+      .openOn(mapInstance);
   }
 
   function handleLocateMe() {
@@ -591,6 +631,15 @@
       mapInstance.on('mousemove', handleMapPointerMove);
       mapInstance.on('mouseout', handleMapPointerLeave);
 
+      // Click handler for mobile + desktop pin clicks
+      mapInstance.on('click', (event) => {
+        const locationIndex = getHoveredLocationIndex(event);
+        if (locationIndex !== null) {
+          const loc = locations[locationIndex];
+          showPartnerPopup(loc, loc.coords);
+        }
+      });
+
       if ('ResizeObserver' in window) {
         mapResizeObserver = new ResizeObserver(() => {
           requestAnimationFrame(() => mapInstance?.invalidateSize(false));
@@ -683,10 +732,11 @@
           <span class="sr-only">Codigo postal o ciudad</span>
           <input
             bind:value={searchQuery}
+            on:input={() => { searchNoResults = false; }}
             type="text"
             name="partner-location"
-            placeholder="Ej. 10101 o Heredia"
-            autocomplete="postal-code"
+            placeholder="Ej. Heredia, Escazú, MotoPlus..."
+            autocomplete="off"
           />
         </label>
 
@@ -709,6 +759,12 @@
           <img src={searchIcon} alt="" aria-hidden="true" />
         </button>
       </form>
+
+      {#if searchNoResults}
+        <div class="partners-search-noresult">
+          No encontramos "{searchQuery}" — probá con una provincia, ciudad o nombre de aliado.
+        </div>
+      {/if}
 
       <div class="partners-zoom-controls" aria-label="Controles de zoom del mapa">
         <button
@@ -1039,6 +1095,27 @@
     border-color: var(--c-sand);
     background: rgba(213, 181, 132, 0.16);
   }
+
+  .partners-search-noresult {
+    position: absolute;
+    top: calc(clamp(62px, 5.8vw, 86px) + 12px);
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 12;
+    background: rgba(1, 13, 40, 0.92);
+    color: #FFF6E2;
+    padding: 10px 20px;
+    border-radius: 12px;
+    font-size: 0.82rem;
+    max-width: 380px;
+    text-align: center;
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(213, 181, 132, 0.2);
+    pointer-events: none;
+    animation: fadeIn 0.2s ease;
+  }
+
+  @keyframes fadeIn { from { opacity: 0; transform: translateX(-50%) translateY(-4px); } to { opacity: 1; transform: translateX(-50%) translateY(0); } }
 
   .partners-icon-button::after,
   .partners-zoom-button::after {
