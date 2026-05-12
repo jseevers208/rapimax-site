@@ -36,9 +36,20 @@ export async function onRequestPost(context) {
     if (frontFile.size > 5 * 1024 * 1024) return errorResponse('La imagen frontal excede 5MB.');
     if (backFile && backFile.size > 5 * 1024 * 1024) return errorResponse('La imagen trasera excede 5MB.');
 
-    // Convert to base64
+    // Convert to base64 (chunked to avoid stack overflow on large images)
+    function arrayBufferToBase64(buffer) {
+      const bytes = new Uint8Array(buffer);
+      let binary = '';
+      const chunkSize = 8192;
+      for (let i = 0; i < bytes.length; i += chunkSize) {
+        const chunk = bytes.subarray(i, i + chunkSize);
+        binary += String.fromCharCode.apply(null, chunk);
+      }
+      return btoa(binary);
+    }
+
     const frontBuffer = await frontFile.arrayBuffer();
-    const frontBase64 = btoa(String.fromCharCode(...new Uint8Array(frontBuffer)));
+    const frontBase64 = arrayBufferToBase64(frontBuffer);
 
     // Build Claude message content
     const content = [
@@ -50,7 +61,7 @@ export async function onRequestPost(context) {
 
     if (backFile) {
       var backBuffer = await backFile.arrayBuffer();
-      const backBase64 = btoa(String.fromCharCode(...new Uint8Array(backBuffer)));
+      const backBase64 = arrayBufferToBase64(backBuffer);
       content.push({
         type: 'image',
         source: { type: 'base64', media_type: backFile.type, data: backBase64 }
