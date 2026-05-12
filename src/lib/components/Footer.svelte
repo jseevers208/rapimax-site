@@ -39,7 +39,7 @@
   <div class="container footer-grid">
     <div class="footer-contact">
       <span class="footer-title">Contáctanos</span>
-      <a href="tel:+50622223333">+506 2222-3333</a>
+      <a href="tel:+50671996622">+506 7199-6622</a>
       <a class="email-link" href="mailto:hola@rapimax.co.cr">hola@rapimax.co.cr</a>
       <div class="social-icons" aria-label="Redes sociales">
         <a href="https://www.facebook.com"  aria-label="Facebook"  target="_blank" rel="noreferrer">FB</a>

@@ -309,8 +309,8 @@
         <h3 class="portal__section-title">{t.questions}</h3>
         <p style="font-size:.85rem; color:rgba(255,246,226,.5); margin:0 0 16px">{t.questionsDesc}</p>
         <div class="portal__contact-btns">
-          <a href="https://wa.me/50600000000?text=Hola RapiMax, quiero consultar sobre mi solicitud" class="portal__contact-btn portal__contact-btn--wa">{t.whatsapp}</a>
-          <a href="tel:+50622223333" class="portal__contact-btn portal__contact-btn--phone">{t.call}</a>
+          <a href="https://wa.me/50686991253?text=Hola RapiMax, quiero consultar sobre mi solicitud" class="portal__contact-btn portal__contact-btn--wa">{t.whatsapp}</a>
+          <a href="tel:+50671996622" class="portal__contact-btn portal__contact-btn--phone">{t.call}</a>
         </div>
       </div>
 
