@@ -49,7 +49,7 @@ export async function onRequestPost(context) {
     ];
 
     if (backFile) {
-      const backBuffer = await backFile.arrayBuffer();
+      var backBuffer = await backFile.arrayBuffer();
       const backBase64 = btoa(String.fromCharCode(...new Uint8Array(backBuffer)));
       content.push({
         type: 'image',
@@ -59,25 +59,50 @@ export async function onRequestPost(context) {
 
     content.push({
       type: 'text',
-      text: `Analyze this Costa Rican cédula (identity document). Extract all visible information and return ONLY a JSON object with these fields (use empty string for anything not visible):
+      text: `You are analyzing a Costa Rican "Cédula de Identidad" issued by the Tribunal Supremo de Elecciones. The card has two sides:
+
+FRONT SIDE contains:
+- Large ID number (format: X XXXX XXXX)
+- "Nombre:" (first/middle names)
+- "1° Apellido:" (first surname)
+- "2° Apellido:" (second surname)
+- Photo and signature
+
+BACK SIDE contains:
+- "Número de Cédula:" (same ID number)
+- "Nacimiento:" (birth date in DD MM YYYY format)
+- After birth date, the place of birth (distrito/cantón/provincia)
+- "Nombre del Padre:" (father's full name)
+- "Nombre de la Madre:" (mother's full name)
+- "Domicilio Electoral:" (electoral address — distrito cantón provincia)
+- "Vencimiento:" (expiration date DD MM YYYY)
+- "Sexo:" (M or F)
+
+The text on the back is printed VERTICALLY (rotated 90°). Read it carefully.
+
+Extract ALL visible information from BOTH sides and return ONLY a JSON object:
 
 {
-  "idNumber": "ID number (cédula number)",
-  "fullName": "Full name as shown",
-  "firstName": "First name(s)",
-  "lastName": "Last name(s)",
-  "gender": "M or F",
-  "birthDate": "YYYY-MM-DD format",
-  "birthPlace": "Place of birth if visible",
-  "nationality": "Nationality",
-  "expirationDate": "Document expiration date YYYY-MM-DD if visible",
-  "maritalStatus": "If visible",
-  "address": "If visible on back",
-  "province": "Province if visible",
-  "canton": "Canton if visible"
+  "idNumber": "Full cédula number with spaces (e.g. 1 0783 0451)",
+  "firstName": "Nombre field (first/middle names)",
+  "firstSurname": "1° Apellido",
+  "secondSurname": "2° Apellido",
+  "fullName": "Combine: Nombre + 1° Apellido + 2° Apellido",
+  "gender": "M or F from Sexo field",
+  "birthDate": "Convert DD MM YYYY to YYYY-MM-DD format",
+  "birthPlace": "Place after birth date (distrito/cantón)",
+  "birthProvince": "Province from birth place (e.g. San José, Alajuela, Heredia, Cartago, Guanacaste, Puntarenas, Limón)",
+  "birthCanton": "Canton from birth place (e.g. Escazú, Central, Desamparados)",
+  "fatherName": "Nombre del Padre",
+  "motherName": "Nombre de la Madre",
+  "electoralAddress": "Full Domicilio Electoral text",
+  "homeProvince": "Province from Domicilio Electoral",
+  "homeCanton": "Canton from Domicilio Electoral",
+  "expirationDate": "Convert DD MM YYYY to YYYY-MM-DD",
+  "nationality": "Costarricense"
 }
 
-Return ONLY the JSON object, no explanation, no markdown.`
+Return ONLY the JSON object. Use empty string for anything not visible. Do NOT guess — only extract what you can clearly read.`
     });
 
     // Call Claude API
@@ -118,31 +143,85 @@ Return ONLY the JSON object, no explanation, no markdown.`
     // Map to form field names
     const formData2 = {
       applicantIdType: 'cedula',
-      applicantIdNumber: parsed.idNumber || '',
+      applicantIdNumber: (parsed.idNumber || '').replace(/\s/g, ''),
       applicantFullName: parsed.fullName || '',
       applicantGender: parsed.gender || '',
       birthDate: parsed.birthDate || '',
       birthPlace: parsed.birthPlace || '',
+      birthCountry: 'Costa Rica',
+      birthProvince: parsed.birthProvince || '',
+      birthCanton: parsed.birthCanton || '',
       nationality: parsed.nationality || 'Costarricense',
-      birthProvince: parsed.province || '',
-      birthCanton: parsed.canton || '',
-      maritalStatus: parsed.maritalStatus || '',
-      homeAddress: parsed.address || '',
-      homeProvince: parsed.province || '',
+      homeProvince: parsed.homeProvince || '',
+      homeCanton: parsed.homeCanton || '',
     };
+
+    // Build review fields for the UI
+    const reviewFields = [
+      { key: 'applicantIdNumber', label: 'Número de cédula', value: parsed.idNumber || '' },
+      { key: 'applicantFullName', label: 'Nombre completo', value: formData2.applicantFullName },
+      { key: 'applicantGender', label: 'Sexo', value: formData2.applicantGender },
+      { key: 'birthDate', label: 'Fecha de nacimiento', value: formData2.birthDate },
+      { key: 'birthPlace', label: 'Lugar de nacimiento', value: formData2.birthPlace },
+      { key: 'birthProvince', label: 'Provincia (nacimiento)', value: formData2.birthProvince },
+      { key: 'nationality', label: 'Nacionalidad', value: formData2.nationality },
+      { key: 'homeProvince', label: 'Provincia (domicilio)', value: formData2.homeProvince },
+      { key: 'homeCanton', label: 'Cantón (domicilio)', value: formData2.homeCanton },
+    ];
+
+    // Extra info for admin reference (not mapped to form)
+    const adminExtras = {
+      fatherName: parsed.fatherName || '',
+      motherName: parsed.motherName || '',
+      electoralAddress: parsed.electoralAddress || '',
+      expirationDate: parsed.expirationDate || '',
+    };
+    const detectedCount = reviewFields.filter(f => f.value).length;
+
+    // Store images to R2 for admin access
+    let r2FrontKey = '';
+    let r2BackKey = '';
+    const idNum = (parsed.idNumber || 'unknown').replace(/[^a-zA-Z0-9-]/g, '');
+    const ts = Date.now();
+
+    if (env.DOCUMENTS) {
+      try {
+        const frontExt = frontFile.type.split('/')[1] || 'jpg';
+        r2FrontKey = `cedulas/${idNum}_${ts}_front.${frontExt}`;
+        await env.DOCUMENTS.put(r2FrontKey, frontBuffer, { httpMetadata: { contentType: frontFile.type } });
+
+        if (backFile) {
+          const backExt = backFile.type.split('/')[1] || 'jpg';
+          r2BackKey = `cedulas/${idNum}_${ts}_back.${backExt}`;
+          await env.DOCUMENTS.put(r2BackKey, backBuffer, { httpMetadata: { contentType: backFile.type } });
+        }
+      } catch (r2Err) {
+        console.error('R2 upload error:', r2Err);
+        // Non-blocking — scan still succeeds even if storage fails
+      }
+    }
 
     // Log activity
     try {
       await env.DB.prepare(
         `INSERT INTO activity_log (record_type, record_id, action, new_value, actor) VALUES (?, ?, ?, ?, ?)`
-      ).bind('rapi_id', 0, 'cedula_scanned', parsed.idNumber || 'unknown', 'system').run();
+      ).bind('rapi_id', 0, 'cedula_scanned', JSON.stringify({ id: idNum, r2Front: r2FrontKey, r2Back: r2BackKey, detected: detectedCount }), 'system').run();
     } catch (e) { console.error('Activity log error:', e); }
 
     return corsResponse({
       success: true,
       data: formData2,
+      reviewFields,
+      detectedCount,
+      totalFields: reviewFields.length,
+      adminExtras,
+      r2Keys: { front: r2FrontKey, back: r2BackKey },
       rawExtracted: parsed,
-      message: '¡Cédula procesada exitosamente!'
+      message: detectedCount >= 7
+        ? '¡Cédula procesada exitosamente!'
+        : detectedCount >= 4
+          ? 'Se detectaron algunos datos. Revisá los campos antes de aceptar.'
+          : 'La imagen no es muy clara. Te recomendamos intentar con otra foto.'
     });
 
   } catch (err) {

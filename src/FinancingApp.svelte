@@ -176,12 +176,14 @@
   let rapiIdError = '';
   let rapiIdFrontFile = null;
   let rapiIdBackFile = null;
+  let rapiIdReview = null; // holds review data after scan
 
   async function handleRapiIdScan() {
     if (!rapiIdFrontFile) { rapiIdError = 'Seleccioná la imagen frontal de la cédula.'; return; }
     rapiIdLoading = true;
     rapiIdError = '';
     rapiIdMessage = '';
+    rapiIdReview = null;
 
     const formData = new FormData();
     formData.append('front', rapiIdFrontFile);
@@ -192,16 +194,8 @@
       const result = await res.json();
 
       if (result.success && result.data) {
-        // Auto-fill form fields from AI extraction
-        const extracted = result.data;
-        const updated = { ...answers };
-        for (const [key, value] of Object.entries(extracted)) {
-          if (value && key in updated) updated[key] = value;
-        }
-        answers = updated;
-        rapiIdMessage = result.message || '¡Datos extraídos exitosamente!';
-        // Auto-close after success
-        setTimeout(() => { rapiIdOpen = false; }, 2000);
+        rapiIdReview = result;
+        rapiIdMessage = result.message || '¡Datos extraídos!';
       } else {
         rapiIdError = result.error || 'No se pudo procesar la cédula.';
       }
@@ -209,6 +203,26 @@
       rapiIdError = 'Error de conexión. Intentá de nuevo.';
     }
     rapiIdLoading = false;
+  }
+
+  function acceptRapiIdData() {
+    if (!rapiIdReview?.data) return;
+    const updated = { ...answers };
+    for (const [key, value] of Object.entries(rapiIdReview.data)) {
+      if (value && key in updated) updated[key] = value;
+    }
+    answers = updated;
+    rapiIdMessage = '¡Formulario completado con los datos de la cédula!';
+    rapiIdReview = null;
+    setTimeout(() => { rapiIdOpen = false; rapiIdMessage = ''; }, 2000);
+  }
+
+  function retryRapiIdScan() {
+    rapiIdReview = null;
+    rapiIdFrontFile = null;
+    rapiIdBackFile = null;
+    rapiIdMessage = '';
+    rapiIdError = '';
   }
 
   const setFieldValue = (field, value) => {
@@ -354,37 +368,64 @@
 
           {#if rapiIdOpen}
             <div class="rapi-id__panel">
-              <p class="rapi-id__desc">Subí una foto de tu cédula (frente y opcional reverso) y la inteligencia artificial completará los datos automáticamente.</p>
+              {#if rapiIdReview}
+                <!-- REVIEW CARD — show extracted data for verification -->
+                <div class="rapi-id__review">
+                  <p class="rapi-id__review-header">
+                    <span class="rapi-id__review-score">{rapiIdReview.detectedCount}/{rapiIdReview.totalFields} campos detectados</span>
+                  </p>
+                  <div class="rapi-id__review-grid">
+                    {#each rapiIdReview.reviewFields as field}
+                      <div class="rapi-id__review-field" class:rapi-id__review-field--empty={!field.value}>
+                        <span class="rapi-id__review-label">{field.label}</span>
+                        <span class="rapi-id__review-value">{field.value || '— no detectado —'}</span>
+                      </div>
+                    {/each}
+                  </div>
+                  <p class="rapi-id__review-hint">{rapiIdMessage}</p>
+                  <div class="rapi-id__review-actions">
+                    <button type="button" class="rapi-id__btn-accept" on:click={acceptRapiIdData}>
+                      ✅ Aceptar y completar formulario
+                    </button>
+                    <button type="button" class="rapi-id__btn-retry" on:click={retryRapiIdScan}>
+                      📷 Intentar con otra foto
+                    </button>
+                  </div>
+                </div>
+              {:else}
+                <!-- UPLOAD FLOW -->
+                <p class="rapi-id__desc">Subí una foto de tu cédula (frente y opcional reverso) y la inteligencia artificial completará los datos automáticamente.</p>
 
-              <div class="rapi-id__uploads">
-                <label class="rapi-id__upload-box">
-                  <span class="rapi-id__upload-icon">{rapiIdFrontFile ? '✅' : '📷'}</span>
-                  <span class="rapi-id__upload-label">{rapiIdFrontFile ? rapiIdFrontFile.name.slice(0, 20) : 'Frente de cédula'}</span>
-                  <span class="rapi-id__upload-req">Requerido</span>
-                  <input type="file" accept="image/*" on:change={(e) => { rapiIdFrontFile = e.target.files?.[0] || null; rapiIdError = ''; }} style="display:none" />
-                </label>
-                <label class="rapi-id__upload-box">
-                  <span class="rapi-id__upload-icon">{rapiIdBackFile ? '✅' : '📷'}</span>
-                  <span class="rapi-id__upload-label">{rapiIdBackFile ? rapiIdBackFile.name.slice(0, 20) : 'Reverso de cédula'}</span>
-                  <span class="rapi-id__upload-req">Opcional</span>
-                  <input type="file" accept="image/*" on:change={(e) => { rapiIdBackFile = e.target.files?.[0] || null; }} style="display:none" />
-                </label>
-              </div>
+                <div class="rapi-id__uploads">
+                  <label class="rapi-id__upload-box">
+                    <span class="rapi-id__upload-icon">{rapiIdFrontFile ? '✅' : '📷'}</span>
+                    <span class="rapi-id__upload-label">{rapiIdFrontFile ? rapiIdFrontFile.name.slice(0, 20) : 'Frente de cédula'}</span>
+                    <span class="rapi-id__upload-req">Requerido</span>
+                    <input type="file" accept="image/*" on:change={(e) => { rapiIdFrontFile = e.target.files?.[0] || null; rapiIdError = ''; }} style="display:none" />
+                  </label>
+                  <label class="rapi-id__upload-box">
+                    <span class="rapi-id__upload-icon">{rapiIdBackFile ? '✅' : '📷'}</span>
+                    <span class="rapi-id__upload-label">{rapiIdBackFile ? rapiIdBackFile.name.slice(0, 20) : 'Reverso de cédula'}</span>
+                    <span class="rapi-id__upload-req">Opcional</span>
+                    <input type="file" accept="image/*" on:change={(e) => { rapiIdBackFile = e.target.files?.[0] || null; }} style="display:none" />
+                  </label>
+                </div>
 
-              {#if rapiIdError}
-                <p class="rapi-id__error">{rapiIdError}</p>
-              {/if}
-              {#if rapiIdMessage}
-                <p class="rapi-id__success">{rapiIdMessage}</p>
-              {/if}
-
-              <button type="button" class="rapi-id__scan-btn" disabled={rapiIdLoading || !rapiIdFrontFile} on:click={handleRapiIdScan}>
-                {#if rapiIdLoading}
-                  <span class="rapi-id__spinner"></span> Analizando cédula...
-                {:else}
-                  ⚡ Escanear y auto-completar
+                {#if rapiIdError}
+                  <p class="rapi-id__error">{rapiIdError}</p>
                 {/if}
-              </button>
+                {#if rapiIdMessage}
+                  <p class="rapi-id__success">{rapiIdMessage}</p>
+                {/if}
+
+                <button type="button" class="rapi-id__scan-btn" disabled={rapiIdLoading || !rapiIdFrontFile} on:click={handleRapiIdScan}>
+                  {#if rapiIdLoading}
+                    <span class="rapi-id__spinner"></span> Analizando cédula...
+                  {:else}
+                    ⚡ Escanear y auto-completar
+                  {/if}
+                </button>
+              {/if}
             </div>
           {/if}
         </div>
@@ -841,6 +882,36 @@
   .rapi-id__scan-btn:disabled { opacity: 0.5; cursor: not-allowed; }
   .rapi-id__spinner { width: 18px; height: 18px; border: 2px solid rgba(213, 181, 132, 0.2); border-top-color: #d5b584; border-radius: 50%; animation: rapiSpin 0.8s linear infinite; }
   @keyframes rapiSpin { to { transform: rotate(360deg); } }
+
+  /* Review card */
+  .rapi-id__review { background: rgba(255, 255, 255, 0.6); border-radius: 12px; padding: 16px; border: 1px solid rgba(18, 41, 65, 0.08); }
+  .rapi-id__review-header { display: flex; align-items: center; gap: 8px; margin: 0 0 12px; }
+  .rapi-id__review-score { font-size: 0.8rem; font-weight: 700; color: var(--c-navy, #122941); background: rgba(213, 181, 132, 0.15); padding: 4px 12px; border-radius: 6px; }
+  .rapi-id__review-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
+  .rapi-id__review-field { padding: 8px 12px; background: rgba(18, 41, 65, 0.03); border-radius: 8px; border-left: 3px solid #22c55e; }
+  .rapi-id__review-field--empty { border-left-color: rgba(18, 41, 65, 0.12); opacity: 0.5; }
+  .rapi-id__review-label { display: block; font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.03em; color: rgba(18, 41, 65, 0.4); margin-bottom: 2px; }
+  .rapi-id__review-value { display: block; font-size: 0.85rem; font-weight: 600; color: var(--c-navy, #122941); }
+  .rapi-id__review-field--empty .rapi-id__review-value { font-weight: 400; font-style: italic; color: rgba(18, 41, 65, 0.3); }
+  .rapi-id__review-hint { font-size: 0.82rem; color: rgba(18, 41, 65, 0.55); margin: 0 0 12px; }
+  .rapi-id__review-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .rapi-id__btn-accept {
+    padding: 12px 16px; border: none; border-radius: 10px;
+    background: linear-gradient(135deg, #0a1929, #1a3a5c); color: #d5b584;
+    font-weight: 700; font-size: 0.85rem; cursor: pointer; transition: all 0.2s;
+  }
+  .rapi-id__btn-accept:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(10, 25, 41, 0.3); }
+  .rapi-id__btn-retry {
+    padding: 12px 16px; border: 1.5px solid rgba(18, 41, 65, 0.15); border-radius: 10px;
+    background: transparent; color: var(--c-navy, #122941);
+    font-weight: 600; font-size: 0.85rem; cursor: pointer; transition: all 0.2s;
+  }
+  .rapi-id__btn-retry:hover { border-color: rgba(213, 181, 132, 0.5); background: rgba(213, 181, 132, 0.05); }
+
+  @media (max-width: 600px) {
+    .rapi-id__review-grid { grid-template-columns: 1fr; }
+    .rapi-id__review-actions { grid-template-columns: 1fr; }
+  }
 
   @media (max-width: 600px) {
     .rapi-id__uploads { grid-template-columns: 1fr; }
