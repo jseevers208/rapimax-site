@@ -507,7 +507,7 @@
                             {#if field.type === 'select'}
                               <select value={answers[field.name]} on:change={(event) => setFieldValue(field, event.currentTarget.value)}>
                                 <option value="">{field.name.endsWith('Country') ? COUNTRY_DEFAULT : `Seleccioná ${field.label.toLowerCase()}`}</option>
-                                {#each getFieldOptions(field) as option}
+                                {#each (field.getOptions ? field.getOptions(answers).map(v => ({ value: v, label: v })) : field.options ?? []) as option}
                                   <option value={option.value}>{option.label}</option>
                                 {/each}
                               </select>
