@@ -11,6 +11,8 @@ const contactEntry = fileURLToPath(new URL('./contactanos/index.html', import.me
 const adminEntry = fileURLToPath(new URL('./admin/index.html', import.meta.url));
 const portalEntry = fileURLToPath(new URL('./mi-solicitud/index.html', import.meta.url));
 const ingresarEntry = fileURLToPath(new URL('./ingresar/index.html', import.meta.url));
+const termsEntry = fileURLToPath(new URL('./terminos-y-condiciones/index.html', import.meta.url));
+const privacyEntry = fileURLToPath(new URL('./politica-de-privacidad/index.html', import.meta.url));
 
 export default defineConfig({
   plugins: [svelte()],
@@ -26,7 +28,9 @@ export default defineConfig({
         contactanos: contactEntry,
         admin: adminEntry,
         'mi-solicitud': portalEntry,
-        ingresar: ingresarEntry
+        ingresar: ingresarEntry,
+        'terminos-y-condiciones': termsEntry,
+        'politica-de-privacidad': privacyEntry
       }
     }
   },

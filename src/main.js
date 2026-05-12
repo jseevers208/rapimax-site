@@ -9,7 +9,9 @@ const routes = {
   '/requisitos': () => import('./RequirementsApp.svelte'),
   '/servicios': () => import('./ServicesApp.svelte'),
   '/mi-solicitud': () => import('./PortalApp.svelte'),
-  '/ingresar': () => import('./IngresarApp.svelte')
+  '/ingresar': () => import('./IngresarApp.svelte'),
+  '/terminos-y-condiciones': () => import('./TermsApp.svelte'),
+  '/politica-de-privacidad': () => import('./PrivacyApp.svelte')
 };
 
 if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
