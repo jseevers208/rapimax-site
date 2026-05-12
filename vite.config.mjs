@@ -13,6 +13,7 @@ const portalEntry = fileURLToPath(new URL('./mi-solicitud/index.html', import.me
 const ingresarEntry = fileURLToPath(new URL('./ingresar/index.html', import.meta.url));
 const termsEntry = fileURLToPath(new URL('./terminos-y-condiciones/index.html', import.meta.url));
 const privacyEntry = fileURLToPath(new URL('./politica-de-privacidad/index.html', import.meta.url));
+const loanEntry = fileURLToPath(new URL('./mi-credito/index.html', import.meta.url));
 
 export default defineConfig({
   plugins: [svelte()],
@@ -30,7 +31,8 @@ export default defineConfig({
         'mi-solicitud': portalEntry,
         ingresar: ingresarEntry,
         'terminos-y-condiciones': termsEntry,
-        'politica-de-privacidad': privacyEntry
+        'politica-de-privacidad': privacyEntry,
+        'mi-credito': loanEntry
       }
     }
   },

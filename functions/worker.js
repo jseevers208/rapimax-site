@@ -16,6 +16,7 @@ import * as lookupHandler from './api/lookup.js';
 import * as filesHandler from './api/files.js';
 import * as rapiIdHandler from './api/rapi-id.js';
 import * as agentHandler from './api/agent.js';
+import * as loansHandler from './api/loans.js';
 import { sendDailyDigest, sendWeeklyDigest } from './api/_scheduled.js';
 
 export default {
@@ -79,6 +80,10 @@ export default {
 
       if (path === '/api/agent' && method === 'POST') {
         return await agentHandler.onRequestPost(context);
+      }
+
+      if (path === '/api/loans') {
+        return await loansHandler.onRequest(context);
       }
 
       // Unknown API route

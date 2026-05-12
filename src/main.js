@@ -11,7 +11,8 @@ const routes = {
   '/mi-solicitud': () => import('./PortalApp.svelte'),
   '/ingresar': () => import('./IngresarApp.svelte'),
   '/terminos-y-condiciones': () => import('./TermsApp.svelte'),
-  '/politica-de-privacidad': () => import('./PrivacyApp.svelte')
+  '/politica-de-privacidad': () => import('./PrivacyApp.svelte'),
+  '/mi-credito': () => import('./LoanPortalApp.svelte')
 };
 
 if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
