@@ -3,64 +3,84 @@
   import targetIcon from '../../assets/partners/target.svg';
   import searchIcon from '../../assets/partners/search.svg';
 
-  const locations = [
+  // Realistic default locations — replaced by CMS data on load
+  let locations = [
     {
-      name: 'AutoMall San Jose',
-      address: 'Paseo Colon, San Jose',
-      phone: '+506 2222-3333',
-      email: 'ventas@rapimax.co.cr',
-      coords: [9.933, -84.087]
+      name: 'RapiMax — Oficina Central',
+      address: 'Avenida Escazú, Torre Lexus, Escazú',
+      phone: '+506 7199-6622',
+      email: 'info@rapimax-dev.com',
+      coords: [9.9368, -84.1397]
     },
     {
-      name: 'MotoCentro Heredia',
-      address: 'Ruta 3, Heredia Centro',
-      phone: '+506 2222-3333',
-      email: 'aliados@rapimax.co.cr',
-      coords: [9.997, -84.116]
+      name: 'MotoRepuestos La Uruca',
+      address: 'La Uruca, San José, frente a Plaza Víquez',
+      phone: '+506 2233-4455',
+      email: 'aliados@rapimax-dev.com',
+      coords: [9.9521, -84.1028]
     },
     {
-      name: 'Grupo Ruta Alajuela',
-      address: 'Av. 2, Alajuela Centro',
-      phone: '+506 2222-3333',
-      email: 'contacto@rapimax.co.cr',
-      coords: [10.016, -84.214]
+      name: 'AutoNova Heredia',
+      address: 'Calle 2, Heredia Centro',
+      phone: '+506 2261-7788',
+      email: 'heredia@rapimax-dev.com',
+      coords: [9.9985, -84.1171]
     },
     {
-      name: 'FleetPro Cartago',
-      address: 'Calle 1, Cartago Centro',
-      phone: '+506 2222-3333',
-      email: 'flotillas@rapimax.co.cr',
-      coords: [9.864, -83.919]
+      name: 'MotoPlus Alajuela',
+      address: 'Radial a Ciudad Quesada, Alajuela',
+      phone: '+506 2440-3322',
+      email: 'alajuela@rapimax-dev.com',
+      coords: [10.0162, -84.2115]
     },
     {
-      name: 'AutoServicios Limon',
-      address: 'Av. Principal, Limon Centro',
-      phone: '+506 2222-4444',
-      email: 'limon@rapimax.co.cr',
-      coords: [9.991, -83.044]
+      name: 'Taller ProMoto Cartago',
+      address: 'Av. 4, Cartago Centro, diagonal al Mercado',
+      phone: '+506 2551-6677',
+      email: 'cartago@rapimax-dev.com',
+      coords: [9.8639, -83.9194]
     },
     {
-      name: 'MotoWorld Puntarenas',
-      address: 'Calle 3, Puntarenas Centro',
-      phone: '+506 2222-5555',
-      email: 'puntarenas@rapimax.co.cr',
-      coords: [9.976, -84.838]
+      name: 'Caribe Motors Limón',
+      address: 'Barrio Pacuare, Limón Centro',
+      phone: '+506 2758-1122',
+      email: 'limon@rapimax-dev.com',
+      coords: [9.9907, -83.0440]
     },
     {
-      name: 'FleetMax Guanacaste',
-      address: 'Liberia Centro',
-      phone: '+506 2222-6666',
-      email: 'guanacaste@rapimax.co.cr',
-      coords: [10.635, -85.437]
+      name: 'MotoShop Pacífico',
+      address: 'Calle del Comercio, Puntarenas Centro',
+      phone: '+506 2661-3344',
+      email: 'puntarenas@rapimax-dev.com',
+      coords: [9.9764, -84.8383]
     },
     {
-      name: 'AutoPro Perez Zeledon',
-      address: 'San Isidro Centro',
-      phone: '+506 2222-7777',
-      email: 'perez@rapimax.co.cr',
-      coords: [9.378, -83.702]
+      name: 'RutaMoto Guanacaste',
+      address: 'Barrio La Cruz, Liberia Centro',
+      phone: '+506 2666-5566',
+      email: 'guanacaste@rapimax-dev.com',
+      coords: [10.6346, -85.4378]
     }
   ];
+
+  // Load locations from CMS on mount
+  onMount(async () => {
+    try {
+      const res = await fetch('/api/content?type=partners');
+      const data = await res.json();
+      if (data.partners && data.partners.length > 0) {
+        locations = data.partners.map(p => ({
+          name: p.name,
+          address: p.address || '',
+          phone: p.phone || '',
+          email: '',
+          coords: [p.latitude, p.longitude]
+        }));
+      }
+    } catch (e) {
+      console.log('Using default partner locations');
+    }
+  });
 
   const searchOrigins = [
     { label: 'San Jose', tokens: ['1', 'san jose', 'sj'], coords: [9.933, -84.087], kind: 'postal' },
