@@ -38,8 +38,8 @@
         fields: [
           makeField('creditFacilityType', 'Tipo de facilidad crediticia', 'select', { full: true, options: CREDIT_FACILITY_OPTIONS, requiredMessage: 'Seleccioná el tipo de facilidad crediticia.' }),
           makeField('requestedCurrency', 'Moneda', 'select', { options: CURRENCY_OPTIONS }),
-          makeField('requestedCreditAmount', 'Monto solicitado', 'number', { placeholder: '25000', min: '0', step: '0.01', inputmode: 'decimal', invalidMessage: 'Ingresá un monto de crédito válido.' }),
-          makeField('requestedTermMonths', 'Plazo solicitado (meses)', 'int', { placeholder: '84', min: '1', max: '84', step: '1', inputmode: 'numeric', invalidMessage: 'Ingresá un plazo válido (1–84 meses).' })
+          makeField('requestedCreditAmount', 'Monto solicitado', 'currency', { placeholder: '25,000.00', inputmode: 'decimal', invalidMessage: 'Ingresá un monto de crédito válido.' }),
+          makeField('requestedTermMonths', 'Plazo solicitado (meses)', 'int', { placeholder: '84 meses max', min: '1', max: '84', step: '1', inputmode: 'numeric', invalidMessage: 'Ingresá un plazo válido (1–84 meses).' })
         ]
       },
       {
@@ -71,7 +71,7 @@
           makeField('homeProvince', 'Provincia', 'select', { options: PROVINCE_OPTIONS.map((province) => ({ value: province, label: province })), resetField: 'homeCanton', requiredMessage: 'Seleccioná la provincia del domicilio.' }),
           makeField('homeCanton', 'Cantón', 'select', { full: true, getOptions: (currentAnswers) => getCantons(currentAnswers.homeProvince), requiredMessage: 'Seleccioná el cantón del domicilio.' }),
           makeField('residenceType', 'Tipo de residencia', 'radio', { full: true, options: RESIDENCE_OPTIONS, requiredMessage: 'Seleccioná el tipo de residencia.' }),
-          makeField('housingPayment', 'Pago mensual vivienda $', 'number', { placeholder: 'Pago mensual', min: '0', step: '0.01', inputmode: 'decimal', invalidMessage: 'Ingresá el pago mensual de vivienda.' }),
+          makeField('housingPayment', 'Pago mensual vivienda', 'currency', { placeholder: '150,000', inputmode: 'decimal', invalidMessage: 'Ingresá el pago mensual de vivienda.' }),
           makeField('exactHomeAddress', 'Dirección exacta del domicilio', 'text', { full: true, placeholder: 'Dirección exacta del domicilio', requiredMessage: 'Ingresá la dirección exacta del domicilio.' })
         ]
       }
@@ -82,7 +82,7 @@
         fields: [
           makeField('employerName', 'Nombre Patrono', 'text', { full: true, placeholder: 'Nombre Patrono', requiredMessage: 'Ingresá el nombre del patrono.' }),
           makeField('occupation', 'Ocupación', 'text', { full: true, placeholder: 'Ocupación', requiredMessage: 'Ingresá la ocupación.' }),
-          makeField('grossMonthlyIncome', 'Ingresos Bruto Mensual $', 'number', { placeholder: 'Ingresos Bruto Mensual $', min: '0', step: '0.01', inputmode: 'decimal', invalidMessage: 'Ingresá el ingreso bruto mensual.' }),
+          makeField('grossMonthlyIncome', 'Ingresos Bruto Mensual', 'currency', { placeholder: '750,000', inputmode: 'decimal', invalidMessage: 'Ingresá el ingreso bruto mensual.' }),
           makeField('employmentStartDate', 'Fecha de Ingreso', 'date', { requiredMessage: 'Seleccioná la fecha de ingreso.', futureMessage: 'La fecha de ingreso no puede estar en el futuro.' }),
           makeField('businessActivity', 'Actividad Empresarial', 'text', { full: true, placeholder: 'Actividad Empresarial', requiredMessage: 'Ingresá la actividad empresarial.' }),
           makeField('workNeighborhood', 'Barrio / Señas del trabajo', 'text', { full: true, placeholder: 'Barrio, urbanización o señas del lugar de trabajo', requiredMessage: 'Ingresá el barrio o señas del trabajo.' }),
@@ -109,7 +109,7 @@
           makeField('spouseBirthPlace', 'Lugar de nacimiento', 'text', { full: true, placeholder: 'Lugar de nacimiento', requiredMessage: 'Ingresá el lugar de nacimiento del cónyuge.' }),
           makeField('spouseEmploymentStartDate', 'Fecha de Ingreso', 'date', { requiredMessage: 'Seleccioná la fecha de ingreso del cónyuge.', futureMessage: 'La fecha de ingreso del cónyuge no puede estar en el futuro.' }),
           makeField('spouseProfession', 'Profesión / Oficio', 'text', { placeholder: 'Profesión / Oficio', requiredMessage: 'Ingresá la profesión u oficio del cónyuge.' }),
-          makeField('spouseGrossMonthlyIncome', 'Ingresos Bruto Mensual $', 'number', { full: true, placeholder: 'Ingresos Bruto Mensual $', min: '0', step: '0.01', inputmode: 'decimal', invalidMessage: 'Ingresá el ingreso bruto mensual del cónyuge.' })
+          makeField('spouseGrossMonthlyIncome', 'Ingresos Bruto Mensual', 'currency', { full: true, placeholder: '500,000', inputmode: 'decimal', invalidMessage: 'Ingresá el ingreso bruto mensual del cónyuge.' })
         ]
       }
     ],
@@ -136,6 +136,16 @@
   };
 
   const getCantons = (province) => COSTA_RICA_GEOGRAPHY[province] ?? [];
+
+  // Currency input formatting
+  const formatCurrencyInput = (value) => {
+    if (!value && value !== 0) return '';
+    const num = String(value).replace(/[^0-9.]/g, '');
+    const parts = num.split('.');
+    parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    return parts.length > 1 ? parts[0] + '.' + parts[1].slice(0, 2) : parts[0];
+  };
+  const parseCurrencyInput = (formatted) => formatted.replace(/,/g, '');
   const isBlank = (value) => (value ?? '').trim().length === 0;
   const getFieldOptions = (field) => field.getOptions ? field.getOptions(answers).map((value) => ({ value, label: value })) : field.options ?? [];
   const getOptionLabel = (options, value) => options.find((option) => option.value === value)?.label ?? value;
@@ -158,6 +168,48 @@
   let attemptedAdvance = false;
   let currentStepIndex = 0;
   let showSuccess = false;
+
+  // Rapi-ID Check state
+  let rapiIdOpen = false;
+  let rapiIdLoading = false;
+  let rapiIdMessage = '';
+  let rapiIdError = '';
+  let rapiIdFrontFile = null;
+  let rapiIdBackFile = null;
+
+  async function handleRapiIdScan() {
+    if (!rapiIdFrontFile) { rapiIdError = 'Seleccioná la imagen frontal de la cédula.'; return; }
+    rapiIdLoading = true;
+    rapiIdError = '';
+    rapiIdMessage = '';
+
+    const formData = new FormData();
+    formData.append('front', rapiIdFrontFile);
+    if (rapiIdBackFile) formData.append('back', rapiIdBackFile);
+
+    try {
+      const res = await fetch('/api/rapi-id', { method: 'POST', body: formData });
+      const result = await res.json();
+
+      if (result.success && result.data) {
+        // Auto-fill form fields from AI extraction
+        const extracted = result.data;
+        const updated = { ...answers };
+        for (const [key, value] of Object.entries(extracted)) {
+          if (value && key in updated) updated[key] = value;
+        }
+        answers = updated;
+        rapiIdMessage = result.message || '¡Datos extraídos exitosamente!';
+        // Auto-close after success
+        setTimeout(() => { rapiIdOpen = false; }, 2000);
+      } else {
+        rapiIdError = result.error || 'No se pudo procesar la cédula.';
+      }
+    } catch {
+      rapiIdError = 'Error de conexión. Intentá de nuevo.';
+    }
+    rapiIdLoading = false;
+  }
 
   const setFieldValue = (field, value) => {
     const nextAnswers = { ...answers, [field.name]: value };
@@ -190,6 +242,10 @@
     }
     if (field.type === 'number') {
       if (!Number.isFinite(Number(value)) || Number(value) <= 0) return field.invalidMessage ?? `Ingresá ${field.label.toLowerCase()} válido.`;
+    }
+    if (field.type === 'currency') {
+      const raw = parseCurrencyInput(String(value));
+      if (!Number.isFinite(Number(raw)) || Number(raw) <= 0) return field.invalidMessage ?? `Ingresá ${field.label.toLowerCase()} válido.`;
     }
     if (field.type === 'int') {
       if (!Number.isInteger(Number(value)) || Number(value) <= 0) return field.invalidMessage ?? `Ingresá ${field.label.toLowerCase()} válido.`;
@@ -287,6 +343,53 @@
         </div>
       </header>
 
+      <!-- Rapi-ID Check -->
+      {#if !showSuccess}
+        <div class="rapi-id" class:rapi-id--open={rapiIdOpen}>
+          <button type="button" class="rapi-id__toggle" on:click={() => { rapiIdOpen = !rapiIdOpen; }}>
+            <span class="rapi-id__badge">⚡ Rapi-ID Check</span>
+            <span class="rapi-id__hint">{rapiIdOpen ? 'Cerrar' : 'Escaneá tu cédula y auto-completá el formulario'}</span>
+            <span class="rapi-id__arrow">{rapiIdOpen ? '▲' : '▼'}</span>
+          </button>
+
+          {#if rapiIdOpen}
+            <div class="rapi-id__panel">
+              <p class="rapi-id__desc">Subí una foto de tu cédula (frente y opcional reverso) y la inteligencia artificial completará los datos automáticamente.</p>
+
+              <div class="rapi-id__uploads">
+                <label class="rapi-id__upload-box">
+                  <span class="rapi-id__upload-icon">{rapiIdFrontFile ? '✅' : '📷'}</span>
+                  <span class="rapi-id__upload-label">{rapiIdFrontFile ? rapiIdFrontFile.name.slice(0, 20) : 'Frente de cédula'}</span>
+                  <span class="rapi-id__upload-req">Requerido</span>
+                  <input type="file" accept="image/*" on:change={(e) => { rapiIdFrontFile = e.target.files?.[0] || null; rapiIdError = ''; }} style="display:none" />
+                </label>
+                <label class="rapi-id__upload-box">
+                  <span class="rapi-id__upload-icon">{rapiIdBackFile ? '✅' : '📷'}</span>
+                  <span class="rapi-id__upload-label">{rapiIdBackFile ? rapiIdBackFile.name.slice(0, 20) : 'Reverso de cédula'}</span>
+                  <span class="rapi-id__upload-req">Opcional</span>
+                  <input type="file" accept="image/*" on:change={(e) => { rapiIdBackFile = e.target.files?.[0] || null; }} style="display:none" />
+                </label>
+              </div>
+
+              {#if rapiIdError}
+                <p class="rapi-id__error">{rapiIdError}</p>
+              {/if}
+              {#if rapiIdMessage}
+                <p class="rapi-id__success">{rapiIdMessage}</p>
+              {/if}
+
+              <button type="button" class="rapi-id__scan-btn" disabled={rapiIdLoading || !rapiIdFrontFile} on:click={handleRapiIdScan}>
+                {#if rapiIdLoading}
+                  <span class="rapi-id__spinner"></span> Analizando cédula...
+                {:else}
+                  ⚡ Escanear y auto-completar
+                {/if}
+              </button>
+            </div>
+          {/if}
+        </div>
+      {/if}
+
       <div class="application-stage">
         <div class="summary-card summary-card--row">
           <div class="summary-card__lead">
@@ -367,6 +470,18 @@
                                   <option value={option.value}>{option.label}</option>
                                 {/each}
                               </select>
+                            {:else if field.type === 'currency'}
+                              <input
+                                type="text"
+                                inputmode={field.inputmode}
+                                placeholder={field.placeholder}
+                                value={formatCurrencyInput(answers[field.name])}
+                                on:input={(event) => {
+                                  const raw = parseCurrencyInput(event.currentTarget.value);
+                                  setFieldValue(field, raw);
+                                  event.currentTarget.value = formatCurrencyInput(raw);
+                                }}
+                              />
                             {:else}
                               <input
                                 type={field.type === 'int' ? 'number' : field.type}
@@ -698,6 +813,40 @@
   }
 
   .field-card input::placeholder { color: rgba(18, 41, 65, 0.3); }
+
+  /* Rapi-ID Check */
+  .rapi-id { margin-bottom: 20px; border-radius: 16px; overflow: hidden; border: 1.5px solid rgba(213, 181, 132, 0.3); background: linear-gradient(135deg, rgba(213, 181, 132, 0.06), rgba(10, 25, 41, 0.03)); }
+  .rapi-id--open { border-color: rgba(213, 181, 132, 0.5); }
+  .rapi-id__toggle { width: 100%; display: flex; align-items: center; gap: 12px; padding: 16px 20px; border: none; background: none; cursor: pointer; text-align: left; }
+  .rapi-id__badge { background: linear-gradient(135deg, #0a1929, #122941); color: #d5b584; padding: 6px 14px; border-radius: 8px; font-weight: 700; font-size: 0.82rem; white-space: nowrap; }
+  .rapi-id__hint { flex: 1; font-size: 0.82rem; color: rgba(18, 41, 65, 0.5); }
+  .rapi-id__arrow { font-size: 0.7rem; color: rgba(18, 41, 65, 0.3); }
+  .rapi-id__panel { padding: 0 20px 20px; }
+  .rapi-id__desc { font-size: 0.85rem; color: rgba(18, 41, 65, 0.55); line-height: 1.6; margin: 0 0 16px; }
+  .rapi-id__uploads { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; }
+  .rapi-id__upload-box { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 20px 12px; border: 2px dashed rgba(18, 41, 65, 0.12); border-radius: 12px; cursor: pointer; transition: all 0.2s; text-align: center; }
+  .rapi-id__upload-box:hover { border-color: rgba(213, 181, 132, 0.5); background: rgba(213, 181, 132, 0.04); }
+  .rapi-id__upload-icon { font-size: 1.5rem; }
+  .rapi-id__upload-label { font-size: 0.8rem; font-weight: 600; color: var(--c-navy, #122941); }
+  .rapi-id__upload-req { font-size: 0.7rem; color: rgba(18, 41, 65, 0.35); }
+  .rapi-id__error { font-size: 0.82rem; color: #ef4444; margin: 0 0 12px; }
+  .rapi-id__success { font-size: 0.82rem; color: #22c55e; font-weight: 600; margin: 0 0 12px; }
+  .rapi-id__scan-btn {
+    width: 100%; padding: 14px 24px; border: none; border-radius: 12px;
+    background: linear-gradient(135deg, #0a1929, #1a3a5c); color: #d5b584;
+    font-weight: 700; font-size: 0.92rem; cursor: pointer; transition: all 0.2s;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+  }
+  .rapi-id__scan-btn:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 8px 24px rgba(10, 25, 41, 0.3); }
+  .rapi-id__scan-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .rapi-id__spinner { width: 18px; height: 18px; border: 2px solid rgba(213, 181, 132, 0.2); border-top-color: #d5b584; border-radius: 50%; animation: rapiSpin 0.8s linear infinite; }
+  @keyframes rapiSpin { to { transform: rotate(360deg); } }
+
+  @media (max-width: 600px) {
+    .rapi-id__uploads { grid-template-columns: 1fr; }
+    .rapi-id__toggle { flex-wrap: wrap; }
+    .rapi-id__hint { order: 3; width: 100%; margin-top: 4px; }
+  }
   .field-card__error { color: #b03a2e; font-size: 0.92rem; font-weight: 600; }
   .radio-group { display: flex; flex-wrap: wrap; gap: 18px; align-items: center; }
   .radio-group--compact { gap: 12px; }
