@@ -369,8 +369,8 @@
 
 <style>
   .whos-rapimax {
-    --whos-container-pad-top: clamp(120px, 22vh, 340px);
-    --whos-container-pad-bottom: clamp(260px, 42vh, 760px);
+    --whos-container-pad-top: clamp(48px, 8vh, 120px);
+    --whos-container-pad-bottom: clamp(64px, 12vh, 180px);
     background: var(--c-crema);
     padding: 0;
   }
@@ -396,7 +396,7 @@
   .whos-rapimax__viewport {
     width: min(100%, 760px);
     display: grid;
-    gap: clamp(180px, 30vh, 520px);
+    gap: clamp(64px, 10vh, 140px);
     justify-items: center;
   }
 
@@ -441,8 +441,8 @@
 
   @media (max-width: 640px), (prefers-reduced-motion: reduce) {
     .whos-rapimax {
-      --whos-container-pad-top: clamp(70px, 14vh, 160px);
-      --whos-container-pad-bottom: clamp(140px, 26vh, 360px);
+      --whos-container-pad-top: clamp(36px, 6vh, 80px);
+      --whos-container-pad-bottom: clamp(48px, 10vh, 120px);
     }
 
     .whos-rapimax__layout {
@@ -451,7 +451,7 @@
 
     .whos-rapimax__viewport {
       width: 100%;
-      gap: clamp(96px, 16vh, 180px);
+      gap: clamp(48px, 8vh, 96px);
     }
 
     .whos-rapimax__copy {
