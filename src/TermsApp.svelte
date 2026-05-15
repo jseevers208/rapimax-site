@@ -74,7 +74,7 @@
       <section>
         <h2>12. Contacto</h2>
         <p>Para consultas relacionadas con estos Términos y Condiciones, el Usuario puede contactarnos a través de los siguientes medios:</p>
-        <p><strong>Rapi Moto Credit S.A.</strong><br>Avenida Escazú, Torre Lexus, San José, Costa Rica<br>Teléfono: +506 7199-6622<br>WhatsApp: +506 8699-1253<br>Correo: info@rapimax-dev.com</p>
+        <p><strong>Rapi Moto Credit S.A.</strong><br>Avenida Escazú, Torre Lexus, San José, Costa Rica<br>Teléfono: +506 7199-6622<br>WhatsApp: +506 7199-6622<br>Correo: info@rapimax-dev.com</p>
       </section>
 
       <div class="legal-content__entity">

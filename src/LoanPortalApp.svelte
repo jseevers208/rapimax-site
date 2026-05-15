@@ -313,7 +313,7 @@
               <div><span class="lbl">Moneda</span><span>{loanData.loan.currency === 'CRC' ? 'Colones (₡)' : 'Dólares ($)'}</span></div>
               <div><span class="lbl">Referencia</span><span>{loanData.loan.loanNumber}</span></div>
             </div>
-            <p class="lp-pay-note">📌 Incluí tu número de préstamo ({loanData.loan.loanNumber}) como referencia en la transferencia. Enviá el comprobante por WhatsApp al <a href="https://wa.me/50686991253" target="_blank">+506 8699-1253</a> para que registremos tu pago.</p>
+            <p class="lp-pay-note">📌 Incluí tu número de préstamo ({loanData.loan.loanNumber}) como referencia en la transferencia. Enviá el comprobante por WhatsApp al <a href="https://wa.me/50671996622" target="_blank">+506 7199-6622</a> para que registremos tu pago.</p>
           </div>
         </div>
       {/if}
@@ -322,7 +322,7 @@
       <div class="lp-contact">
         <p>¿Necesitás ayuda? Contactanos:</p>
         <div class="lp-contact__links">
-          <a href="https://wa.me/50686991253" target="_blank">💬 WhatsApp</a>
+          <a href="https://wa.me/50671996622" target="_blank">💬 WhatsApp</a>
           <a href="tel:+50671996622">📞 +506 7199-6622</a>
           <a href="mailto:info@rapimax-dev.com">✉️ Email</a>
         </div>

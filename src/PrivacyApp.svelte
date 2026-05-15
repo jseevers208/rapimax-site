@@ -85,7 +85,7 @@
       <section>
         <h2>13. Contacto y reclamaciones</h2>
         <p>Para ejercer sus derechos, realizar consultas o presentar reclamaciones sobre el tratamiento de sus datos personales, el usuario puede contactarnos a:</p>
-        <p><strong>Rapi Moto Credit S.A.</strong><br>Avenida Escazú, Torre Lexus, San José, Costa Rica<br>Teléfono: +506 7199-6622<br>WhatsApp: +506 8699-1253<br>Correo: info@rapimax-dev.com</p>
+        <p><strong>Rapi Moto Credit S.A.</strong><br>Avenida Escazú, Torre Lexus, San José, Costa Rica<br>Teléfono: +506 7199-6622<br>WhatsApp: +506 7199-6622<br>Correo: info@rapimax-dev.com</p>
         <p>Asimismo, el usuario tiene derecho a presentar una reclamación ante la Agencia de Protección de Datos de los Habitantes (PRODHAB) en caso de considerar que sus derechos han sido vulnerados.</p>
       </section>
 

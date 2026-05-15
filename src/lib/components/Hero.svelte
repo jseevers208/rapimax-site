@@ -852,7 +852,7 @@
                 <p class="hero-v2-subhead">Vos elegís el vehículo. Nosotros te ayudamos a hacerlo realidad</p>
                 <GlowRing
                   as="a"
-                  href="/calculadora"
+                  href="/contactanos"
                   class="btn primary hero-v2-cta hero-v2-cta--intro"
                   glowColor="rgba(213, 181, 132, 0.8)"
                   outlineColor="rgba(213, 181, 132, 0.96)"

@@ -474,7 +474,7 @@
       <div class="how-it-works__cta-row">
         <a
           class="btn primary how-it-works__cta"
-          href="/solicitud"
+          href="/contactanos"
         >
           Aplicar ahora
         </a>

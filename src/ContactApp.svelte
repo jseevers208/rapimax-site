@@ -7,7 +7,7 @@
   const CONTACT_PHONE_DISPLAY = '+506 7199-6622';
   const CONTACT_PHONE_HREF = 'tel:+50671996622';
   const SERVICE_HOURS_LABEL = 'Lunes a Viernes · 8:00 a. m. - 6:00 p. m.';
-  const WHATSAPP_URL = 'https://wa.me/50686991253?text=Hola%20RapiMax%2C%20necesito%20ayuda%20con%20mi%20financiamiento.';
+  const WHATSAPP_URL = 'https://wa.me/50671996622?text=Hola%20RapiMax%2C%20necesito%20ayuda%20con%20mi%20financiamiento.';
 
   let contactForm = { name: '', lastName: '', idNumber: '', email: '', cellphone: '', comment: '' };
   let contactSubmitting = false;
@@ -308,6 +308,8 @@
         </section>
       {/if}
 
+      <!-- HIDDEN: FAQ section — re-enable later -->
+      {#if false}
       {#if visibleFaqItems.length > 0 || searchActive}
         <section class="faq-heading" aria-labelledby="faq-title">
           <h2 id="faq-title">Preguntas frecuentes</h2>
@@ -382,6 +384,8 @@
             {/if}
           </section>
       {/if}
+      {/if}
+      <!-- END HIDDEN: FAQ section -->
     </div>
   </section>
 

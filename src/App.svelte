@@ -181,6 +181,8 @@
     </div>
   </div>
 
+  <!-- HIDDEN: Partners section — re-enable later -->
+  {#if false}
   <div class="scroll-layer scroll-layer--partners">
     <div class="sticky-panel sticky-panel--partners">
       {#if Partners}
@@ -190,7 +192,10 @@
       {/if}
     </div>
   </div>
+  {/if}
 
+  <!-- HIDDEN: Partner Map section — re-enable later -->
+  {#if false}
   <div class="scroll-layer scroll-layer--partner-map">
     <div class="sticky-panel sticky-panel--partner-map">
       {#if PartnerMap}
@@ -200,6 +205,7 @@
       {/if}
     </div>
   </div>
+  {/if}
 </SiteLayout>
 
 <style>

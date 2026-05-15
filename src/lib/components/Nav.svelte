@@ -39,8 +39,8 @@
           { label: 'Motocicletas', href: '/servicios#motocicletas' }
         ],
         extras: [
-          { label: 'Calculadora de financiamiento', href: '/calculadora' },
-          { label: 'Solicitar financiamiento', href: '/solicitud' }
+          { label: 'Calculadora de financiamiento', href: '/contactanos' },
+          { label: 'Solicitar financiamiento', href: '/contactanos' }
         ]
       }
     },
@@ -520,7 +520,8 @@
           </div>
         </nav>
 
-        <div class="actions">
+        <!-- HIDDEN: Ingresar/Lista de espera — re-enable later -->
+        <div class="actions" style="display:none">
           <div
             class="auth-switch"
             bind:this={authContainerRef}

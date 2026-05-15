@@ -173,7 +173,7 @@
           <p class="requirements-cta__label" id="requirements-cta-title">Siguiente paso</p>
           <a
             class="btn primary requirements-cta__button"
-            href="/solicitud"
+            href="/contactanos"
           >
             Aplicá en minutos y obtené respuesta en menos de 1 hora.
           </a>

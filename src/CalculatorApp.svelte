@@ -572,7 +572,7 @@
               </div>
 
               <div class="result-actions">
-                <a href="/solicitud" class="btn primary" style="text-decoration:none; text-align:center;">Solicitar financiamiento</a>
+                <a href="/contactanos" class="btn primary" style="text-decoration:none; text-align:center;">Solicitar financiamiento</a>
                 <button type="button" class="btn ghost" on:click={handleBack}>Editar datos</button>
                 <button type="button" class="btn ghost" on:click={handleRestart}>Nueva simulación</button>
               </div>

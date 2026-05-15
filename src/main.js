@@ -3,8 +3,8 @@ import './app.css';
 
 const routes = {
   '/': () => import('./App.svelte'),
-  '/calculadora': () => import('./CalculatorApp.svelte'),
-  '/solicitud': () => import('./FinancingApp.svelte'),
+  '/calculadora': () => { window.location.href = '/contactanos'; return import('./ContactApp.svelte'); },
+  '/solicitud': () => { window.location.href = '/contactanos'; return import('./ContactApp.svelte'); },
   '/contactanos': () => import('./ContactApp.svelte'),
   '/requisitos': () => import('./RequirementsApp.svelte'),
   '/servicios': () => import('./ServicesApp.svelte'),

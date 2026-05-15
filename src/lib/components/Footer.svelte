@@ -43,15 +43,14 @@
       <a class="email-link" href="mailto:info@rapimax-dev.com">info@rapimax-dev.com</a>
       <div class="social-icons" aria-label="Redes sociales">
         <a href="https://www.instagram.com/rapimaxcr" aria-label="Instagram" target="_blank" rel="noreferrer">IG</a>
-        <a href="https://wa.me/50686991253?text=Hola%20RapiMax" aria-label="WhatsApp" target="_blank" rel="noreferrer">WA</a>
+        <a href="https://wa.me/50671996622?text=Hola%20RapiMax" aria-label="WhatsApp" target="_blank" rel="noreferrer">WA</a>
       </div>
     </div>
     <div class="footer-links">
       <span class="footer-title">Enlaces rápidos</span>
       <a href={resolveHref('#inicio')}>Quiénes somos</a>
       <a href="/servicios">Vehículos</a>
-      <a href="/calculadora">Calculadora</a>
-      <a href={resolveHref('#alianzas')}>Alianzas</a>
+      <a href="/contactanos">Contáctanos</a>
     </div>
     <div class="footer-legal">
       <span class="footer-title">Legal</span>

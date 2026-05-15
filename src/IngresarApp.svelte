@@ -110,7 +110,7 @@
       {/if}
 
       <div class="ingresar__footer-links">
-        <a href="/solicitud">{t.noApp}</a>
+        <a href="/contactanos">{t.noApp}</a>
         <a href="/">{t.goHome}</a>
       </div>
     </div>
