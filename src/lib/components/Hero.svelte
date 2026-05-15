@@ -857,7 +857,7 @@
                   glowColor="rgba(213, 181, 132, 0.8)"
                   outlineColor="rgba(213, 181, 132, 0.96)"
                 >
-                  <span class="hero-v2-cta__label">Calculá tu financiamiento</span>
+                  <span class="hero-v2-cta__label">Contactanos</span>
                 </GlowRing>
               </div>
             </div>

@@ -57,7 +57,7 @@
       id: 'telefono',
       kind: 'link',
       title: 'Telefono',
-      description: 'Llamanos si preferis resolver tu consulta con un asesor por voz.',
+      description: 'Llamanos si preferís resolver tu consulta con un asesor por voz.',
       label: CONTACT_PHONE_DISPLAY,
       href: CONTACT_PHONE_HREF,
       searchTerms: 'telefono llamada numero contacto servicio cliente'
@@ -81,7 +81,7 @@
     {
       id: 'documentos',
       question: 'Que documentos necesito para iniciar?',
-      answer: 'Depende de tu perfil, pero normalmente vas a necesitar identificacion vigente, licencia de conducir y respaldo de ingresos. Si queres ver el detalle por tipo de solicitante, tambien podes revisar la pagina de requisitos.'
+      answer: 'Depende de tu perfil, pero normalmente vas a necesitar identificación vigente, licencia de conducir y respaldo de ingresos. Si querés ver el detalle por tipo de solicitante, también podés revisar la página de requisitos.'
     },
     {
       id: 'seguimiento',
@@ -91,22 +91,22 @@
     {
       id: 'alianzas',
       question: 'Puedo aplicar desde una agencia aliada y tambien por cuenta propia?',
-      answer: 'Si. Trabajamos con agencias aliadas y tambien podemos estructurar financiamiento para un vehiculo que ya encontraste por tu cuenta, siempre que cumpla con la validacion correspondiente.'
+      answer: 'Si. Trabajamos con agencias aliadas y tambien podemos estructurar financiamiento para un vehículo que ya encontraste por tu cuenta, siempre que cumpla con la validación correspondiente.'
     },
     {
       id: 'horarios',
       question: 'Atienden fuera del horario laboral?',
-      answer: 'La atencion en vivo esta disponible de lunes a viernes de 8:00 a. m. a 6:00 p. m. Si nos escribis fuera de ese horario, tu mensaje quedara registrado para seguimiento.'
+      answer: 'La atención en vivo esta disponible de lunes a viernes de 8:00 a. m. a 6:00 p. m. Si nos escribís fuera de ese horario, tu mensaje quedara registrado para seguimiento.'
     },
     {
       id: 'sin-respuesta',
       question: 'Ya escribi y todavia no recibo respuesta. Que hago?',
-      answer: 'Revisa si tu mensaje incluye tu nombre y el motivo de la consulta. Si escribiste fuera del horario de atencion, nuestro equipo retomara tu caso en la siguiente jornada habil.'
+      answer: 'Revisá si tu mensaje incluye tu nombre y el motivo de la consulta. Si escribiste fuera del horario de atención, nuestro equipo retomara tu caso en la siguiente jornada habil.'
     },
     {
       id: 'llamada',
       question: 'Que hago si no logro comunicarme por telefono?',
-      answer: 'Intenta de nuevo dentro del horario de atencion o dejanos un mensaje por WhatsApp para que un asesor pueda devolverte el contacto con mas contexto.'
+      answer: 'Intenta de nuevo dentro del horario de atención o dejanos un mensaje por WhatsApp para que un asesor pueda devolverte el contacto con mas contexto.'
     },
     {
       id: 'documentacion-ayuda',
@@ -116,7 +116,7 @@
     {
       id: 'cotizacion-ayuda',
       question: 'Me pueden ayudar a entender una cotizacion?',
-      answer: 'Compartinos el monto, plazo o cuota que queres revisar y te ayudamos a interpretar la propuesta antes de continuar con tu solicitud.'
+      answer: 'Compartinos el monto, plazo o cuota que querés revisar y te ayudamos a interpretar la propuesta antes de continuar con tu solicitud.'
     }
   ];
 
@@ -124,17 +124,17 @@
     {
       id: 'canales',
       topic: 'Guia de canales de contacto',
-      info: 'Usa el formulario para dejarnos tu consulta, WhatsApp para mensajes rapidos y telefono para conversaciones directas con un asesor.'
+      info: 'Usá el formulario para dejarnos tu consulta, WhatsApp para mensajes rápidos y teléfono para conversaciones directas con un asesor.'
     },
     {
       id: 'preparacion',
       topic: 'Como preparar tu consulta',
-      info: 'Para recibir ayuda mas rapida, comparti tu nombre, tipo de financiamiento, si ya aplicaste y cualquier dato de seguimiento que te haya dado un asesor.'
+      info: 'Para recibir ayuda mas rápida, compartí tu nombre, tipo de financiamiento, si ya aplicaste y cualquier dato de seguimiento que te haya dado un asesor.'
     },
     {
       id: 'escalamiento',
       topic: 'Cuando conviene escalar por telefono',
-      info: 'Si tu caso requiere confirmar documentos, revisar tiempos de respuesta o aclarar una propuesta recibida, la llamada telefonica suele ser el canal mas directo.'
+      info: 'Si tu caso requiere confirmar documentos, revisar tiempos de respuesta o aclarar una propuesta recibida, la llamada telefonica suele ser el canal más directo.'
     }
   ];
 
