@@ -12,27 +12,32 @@
     {
       iconName: 'why-lightning',
       title: 'Agilidad',
-      body: 'Aplicá en minutos y obtené respuesta en menos de 1 hora.'
+      body: 'Aplicá en minutos y obtené respuesta en menos de 1 hora.',
+      mobileSvg: '<svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M28 4L12 28h12l-4 16 16-24H24l4-16z" fill="currentColor" opacity="0.9"/></svg>'
     },
     {
       iconName: 'why-stopwatch',
       title: 'Rapidez',
-      body: 'Estrená tu vehículo en menos de 24 horas una vez aprobado tu financiamiento.'
+      body: 'Estrená tu vehículo en menos de 24 horas una vez aprobado tu financiamiento.',
+      mobileSvg: '<svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="24" cy="26" r="16" stroke="currentColor" stroke-width="3" fill="none"/><path d="M24 16v10l7 5" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><path d="M20 4h8M24 4v6" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg>'
     },
     {
       iconName: 'why-digital',
       title: '100% digital',
-      body: 'Un proceso simple, rápido y eficiente.'
+      body: 'Un proceso simple, rápido y eficiente.',
+      mobileSvg: '<svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="14" y="6" width="20" height="36" rx="4" stroke="currentColor" stroke-width="3" fill="none"/><circle cx="24" cy="36" r="2" fill="currentColor"/><circle cx="34" cy="34" r="10" stroke="currentColor" stroke-width="2.5" fill="none"/><path d="M30 34h4M34 30v4M37 31l-3 3M31 37l3-3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>'
     },
     {
       iconName: 'why-gear',
       title: 'Flexibilidad',
-      body: 'Soluciones de financiamiento adaptadas a cada cliente.'
+      body: 'Soluciones de financiamiento adaptadas a cada cliente.',
+      mobileSvg: '<svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M24 30a6 6 0 100-12 6 6 0 000 12z" stroke="currentColor" stroke-width="3" fill="none"/><path d="M26 8h-4l-1 4-3.5 1.5L14 11l-3 3 2.5 3.5L12 21l-4 1v4l4 1 1.5 3.5L11 34l3 3 3.5-2.5L21 36l1 4h4l1-4 3.5-1.5L34 37l3-3-2.5-3.5L36 27l4-1v-4l-4-1-1.5-3.5L37 14l-3-3-3.5 2.5L27 12l-1-4z" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linejoin="round"/><path d="M32 18l-2 2" stroke="currentColor" stroke-width="3" stroke-linecap="round"/><circle cx="35" cy="15" r="3" fill="currentColor" opacity="0.7"/></svg>'
     },
     {
       iconName: 'why-handshake',
       title: 'Atención personalizada',
-      body: 'Asesores reales te acompañan durante todo el proceso.'
+      body: 'Asesores reales te acompañan durante todo el proceso.',
+      mobileSvg: '<svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M8 22l6-6a4 4 0 013-1h4l8-4a2 2 0 012.2.4L35 16h5a2 2 0 012 2v2a2 2 0 01-2 2h-3l-8 8-6-2-4 4" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/><path d="M20 30l4 2 6-6" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 20h4v14H4z" rx="1" fill="currentColor" opacity="0.3"/><path d="M40 14h4v10h-4z" rx="1" fill="currentColor" opacity="0.3"/></svg>'
     }
   ];
 
@@ -358,6 +363,9 @@
 
             {#if !webglReady[index]}
               <span class="benefit-card__fallback" aria-hidden="true"></span>
+            {/if}
+            {#if isMobile && benefit.mobileSvg}
+              <span class="benefit-card__mobile-icon" aria-hidden="true">{@html benefit.mobileSvg}</span>
             {/if}
           </span>
 
@@ -686,10 +694,39 @@
     color: #fff6e2 !important;
   }
 
-  /* Fallback icon smaller for 2-col grid */
+  /* Fallback icon hidden on mobile — SVG takes over */
   .benefits-section--mobile :global(.benefit-card__fallback) {
-    width: 80% !important;
-    height: 80% !important;
+    display: none !important;
+  }
+  .benefits-section--mobile :global(.benefit-card__canvas) {
+    display: none !important;
+  }
+
+  /* Mobile SVG icon */
+  .benefits-section--mobile :global(.benefit-card__mobile-icon) {
+    display: block;
+    width: 100%;
+    height: 100%;
+    color: var(--c-navy, #122941);
+  }
+  .benefits-section--mobile :global(.benefit-card__mobile-icon) :global(svg) {
+    width: 100%;
+    height: 100%;
+  }
+  .benefits-section--mobile :global(.benefit-card.is-active) :global(.benefit-card__mobile-icon) {
+    color: #d5b584;
+  }
+
+  /* Center the 5th (last odd) card across both columns */
+  .benefits-section--mobile .benefits-rail :global(.benefit-card:last-child:nth-child(odd)) {
+    grid-column: 1 / -1;
+    max-width: calc(50% - 5px);
+    justify-self: center;
+  }
+
+  /* Hide mobile icon on desktop */
+  :global(.benefit-card__mobile-icon) {
+    display: none;
   }
 
   .benefits-section--reduced-motion :global(.benefit-card),
