@@ -1260,8 +1260,8 @@
   @media (max-width: 720px) {
     .hero-v2-shell {
       --hero-art-offset-x: 0px;
-      --hero-art-offset-y: -20px;
-      --hero-art-scale: 0.7;
+      --hero-art-offset-y: -10px;
+      --hero-art-scale: 0.75;
     }
 
     .hero-v2-text h1 { font-size: clamp(1.8rem, 5vw + 0.8rem, 2.8rem); }
@@ -1276,7 +1276,20 @@
     }
     .hero-v2-svg-frame--full {
       inset: 0;
-      opacity: 0.4;
+    }
+    /* Override line + logo opacity for mobile — navy blue, not gray */
+    .hero-v2-lines :global(path) {
+      opacity: 0.18 !important;
+      stroke: var(--c-navy, #122941) !important;
+    }
+    .hero-v2-logo :global(path) {
+      opacity: 0.9 !important;
+      stroke: var(--c-navy, #122941) !important;
+    }
+    /* Make logo larger on mobile */
+    .hero-v2-logo {
+      transform: scale(1.3);
+      transform-origin: center 40%;
     }
     .hero-v2-text--intro {
       padding: 0;

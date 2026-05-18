@@ -601,35 +601,67 @@
 
   .benefits-section--mobile {
     padding-top: clamp(28px, 6vw, 40px);
-    padding-bottom: clamp(56px, 12vw, 84px);
+    padding-bottom: clamp(36px, 8vw, 56px);
   }
 
   .benefits-section--mobile .benefits-shell {
-    gap: clamp(24px, 5vw, 32px);
+    gap: clamp(20px, 4vw, 28px);
   }
 
   .benefits-section--mobile .benefits-rail {
     grid-template-columns: minmax(0, 1fr);
+    gap: 10px;
   }
 
   .benefits-section--mobile :global(.benefit-card) {
     width: 100%;
-    min-height: 280px;
+    min-height: auto;
+    padding: 20px;
+    display: grid;
+    grid-template-columns: 64px 1fr;
+    grid-template-rows: auto;
+    align-items: center;
+    gap: 16px;
   }
 
   .benefits-section--mobile :global(.benefit-card__media),
   .benefits-section--mobile :global(.benefit-card.is-active) :global(.benefit-card__media) {
-    width: 132px;
-    height: 132px;
+    width: 64px;
+    height: 64px;
+    position: relative;
+    top: auto;
+    right: auto;
+    transform: none;
+  }
+
+  .benefits-section--mobile :global(.benefit-card__copy) {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
   }
 
   .benefits-section--mobile :global(.benefit-card__heading) {
-    max-width: 14ch;
+    max-width: none;
+    font-size: 1rem;
   }
 
   .benefits-section--mobile :global(.benefit-card__body),
   .benefits-section--mobile :global(.benefit-card.is-active) :global(.benefit-card__body) {
-    inline-size: min(28ch, 100%);
+    inline-size: 100%;
+    max-height: none;
+    opacity: 1;
+    font-size: 0.82rem;
+    line-height: 1.45;
+  }
+
+  /* All cards show expanded on mobile — no hover effect needed */
+  .benefits-section--mobile :global(.benefit-card.is-active) {
+    background: var(--c-navy, #122941);
+    color: #fff6e2;
+  }
+  .benefits-section--mobile :global(.benefit-card:not(.is-active)) :global(.benefit-card__body) {
+    max-height: none;
+    opacity: 0.65;
   }
 
   .benefits-section--reduced-motion :global(.benefit-card),
