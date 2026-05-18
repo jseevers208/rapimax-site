@@ -58,20 +58,20 @@
   }
 
   .footer-shell--spacious {
-    padding-top: clamp(56px, 12vh, 140px);
+    padding-top: clamp(32px, 6vh, 64px);
   }
 
   .footer-shell--compact {
-    padding-top: clamp(36px, 8vh, 84px);
+    padding-top: clamp(20px, 4vh, 40px);
   }
 
   @media (max-width: 640px) {
     .footer-shell--spacious {
-      padding-top: clamp(30px, 8vh, 72px);
+      padding-top: clamp(20px, 4vh, 40px);
     }
 
     .footer-shell--compact {
-      padding-top: clamp(24px, 7vh, 56px);
+      padding-top: clamp(16px, 3vh, 32px);
     }
   }
 

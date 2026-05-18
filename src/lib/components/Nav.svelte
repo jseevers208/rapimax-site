@@ -321,6 +321,10 @@
   // Search
   let searchOpen = false;
   let searchValue = '';
+  let mobileMenuOpen = false;
+
+  function toggleMobileMenu() { mobileMenuOpen = !mobileMenuOpen; }
+  function closeMobileMenu() { mobileMenuOpen = false; }
   let searchInputRef;
 
   function openSearch() {
@@ -520,7 +524,14 @@
           </div>
         </nav>
 
-        <!-- HIDDEN: Ingresar/Lista de espera — re-enable later -->
+        <!-- Mobile hamburger -->
+        <button class="mobile-burger" on:click={toggleMobileMenu} aria-label="Menú">
+          {#if mobileMenuOpen}
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M6 6L18 18M18 6L6 18" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
+          {:else}
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
+          {/if}
+        </button>
         <div class="actions" style="display:none">
           <div
             class="auth-switch"
@@ -655,6 +666,20 @@
       {/if}
     </div>
   </header>
+
+  <!-- Mobile drawer -->
+  {#if mobileMenuOpen}
+    <!-- svelte-ignore a11y-click-events-have-key-events a11y-no-static-element-interactions -->
+    <div class="mobile-overlay" on:click={closeMobileMenu}></div>
+    <nav class="mobile-drawer" aria-label="Menú móvil">
+      <a href="/servicios" class="mobile-drawer__link" on:click={closeMobileMenu}>Nuestros productos</a>
+      <a href="/requisitos" class="mobile-drawer__link" on:click={closeMobileMenu}>Requisitos</a>
+      <a href="/contactanos" class="mobile-drawer__link" on:click={closeMobileMenu}>Contáctanos</a>
+      <div class="mobile-drawer__divider"></div>
+      <a href="https://wa.me/50671996622" target="_blank" rel="noopener" class="mobile-drawer__link mobile-drawer__link--wa" on:click={closeMobileMenu}>💬 WhatsApp</a>
+      <a href="tel:+50671996622" class="mobile-drawer__link" on:click={closeMobileMenu}>📞 +506 7199-6622</a>
+    </nav>
+  {/if}
 </div>
 
 <style>
@@ -1433,6 +1458,55 @@
     .dropdown-wrapper {
       display: none;
     }
+
+    .mobile-burger {
+      display: flex;
+    }
+  }
+
+  /* Mobile hamburger button */
+  .mobile-burger {
+    display: none;
+    align-items: center; justify-content: center;
+    width: 40px; height: 40px; border: none; border-radius: 10px;
+    background: rgba(255, 255, 255, 0.08); color: var(--nav-surface-dark);
+    cursor: pointer; transition: all 0.2s; margin-left: auto;
+  }
+  .mobile-burger:hover { background: rgba(255, 255, 255, 0.15); }
+
+  /* Mobile overlay */
+  .mobile-overlay {
+    position: fixed; inset: 0; z-index: 9990;
+    background: rgba(0, 0, 0, 0.5); backdrop-filter: blur(4px);
+    animation: mobileOverlayIn 0.2s ease;
+  }
+  @keyframes mobileOverlayIn { from { opacity: 0; } to { opacity: 1; } }
+
+  /* Mobile drawer */
+  .mobile-drawer {
+    position: fixed; top: 0; right: 0; z-index: 9991;
+    width: min(300px, 80vw); height: 100vh;
+    background: linear-gradient(180deg, #0a1929 0%, #122941 100%);
+    padding: 80px 24px 40px;
+    display: flex; flex-direction: column; gap: 4px;
+    box-shadow: -8px 0 32px rgba(0, 0, 0, 0.3);
+    animation: mobileDrawerIn 0.25s ease;
+  }
+  @keyframes mobileDrawerIn { from { transform: translateX(100%); } to { transform: translateX(0); } }
+
+  .mobile-drawer__link {
+    display: block; padding: 14px 16px; border-radius: 10px;
+    color: rgba(255, 246, 226, 0.8); text-decoration: none;
+    font-size: 1rem; font-weight: 600;
+    transition: all 0.15s;
+  }
+  .mobile-drawer__link:hover, .mobile-drawer__link:active {
+    background: rgba(213, 181, 132, 0.1); color: #d5b584;
+  }
+  .mobile-drawer__link--wa { color: #25D366; }
+  .mobile-drawer__divider {
+    height: 1px; background: rgba(255, 255, 255, 0.08);
+    margin: 8px 16px;
   }
 
   @media (max-width: 720px) {

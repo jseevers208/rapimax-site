@@ -1259,12 +1259,12 @@
 
   @media (max-width: 720px) {
     .hero-v2-shell {
-      --hero-art-offset-x: -12px;
-      --hero-art-offset-y: -72px;
-      --hero-art-scale: 1.1;
+      --hero-art-offset-x: 0px;
+      --hero-art-offset-y: -20px;
+      --hero-art-scale: 0.7;
     }
 
-    .hero-v2-text h1 { font-size: clamp(2.2rem, 6vw + 1rem, 3.6rem); }
+    .hero-v2-text h1 { font-size: clamp(1.8rem, 5vw + 0.8rem, 2.8rem); }
     .hero-v2-mask-content-inner {
       top: var(--hero-safe-top, 0px);
       align-items: flex-end;
@@ -1276,6 +1276,7 @@
     }
     .hero-v2-svg-frame--full {
       inset: 0;
+      opacity: 0.4;
     }
     .hero-v2-text--intro {
       padding: 0;
