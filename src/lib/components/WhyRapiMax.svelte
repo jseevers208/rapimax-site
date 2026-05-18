@@ -608,60 +608,88 @@
     gap: clamp(20px, 4vw, 28px);
   }
 
+  /* 2-column grid of compact cards */
   .benefits-section--mobile .benefits-rail {
-    grid-template-columns: minmax(0, 1fr);
+    grid-template-columns: 1fr 1fr !important;
     gap: 10px;
   }
 
+  /* Reset absolute positioning — make cards flow naturally */
   .benefits-section--mobile :global(.benefit-card) {
     width: 100%;
-    min-height: auto;
-    padding: 20px;
-    display: grid;
-    grid-template-columns: 64px 1fr;
-    grid-template-rows: auto;
-    align-items: center;
-    gap: 16px;
+    min-height: auto !important;
+    padding: 20px 16px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    text-align: center;
+    gap: 12px;
+    aspect-ratio: 1 / 1;
+    border-radius: 20px !important;
   }
 
+  /* Force media out of absolute positioning */
   .benefits-section--mobile :global(.benefit-card__media),
   .benefits-section--mobile :global(.benefit-card.is-active) :global(.benefit-card__media) {
-    width: 64px;
-    height: 64px;
-    position: relative;
-    top: auto;
-    right: auto;
-    transform: none;
+    position: static !important;
+    width: 56px !important;
+    height: 56px !important;
+    transform: none !important;
+    opacity: 1 !important;
+    flex-shrink: 0;
   }
 
+  /* Force copy out of absolute positioning */
   .benefits-section--mobile :global(.benefit-card__copy) {
+    position: static !important;
+    left: auto !important;
+    right: auto !important;
+    bottom: auto !important;
     display: flex;
     flex-direction: column;
+    align-items: center;
     gap: 4px;
   }
 
   .benefits-section--mobile :global(.benefit-card__heading) {
-    max-width: none;
-    font-size: 1rem;
+    max-width: none !important;
+    font-size: 0.88rem !important;
+    text-align: center;
+    transform: none !important;
+    opacity: 1 !important;
   }
 
-  .benefits-section--mobile :global(.benefit-card__body),
-  .benefits-section--mobile :global(.benefit-card.is-active) :global(.benefit-card__body) {
-    inline-size: 100%;
-    max-height: none;
-    opacity: 1;
-    font-size: 0.82rem;
-    line-height: 1.45;
+  /* Hide body text on non-active cards — too small for 2-col */
+  .benefits-section--mobile :global(.benefit-card__body) {
+    display: none !important;
   }
 
-  /* All cards show expanded on mobile — no hover effect needed */
+  /* Active card: show body text, navy background */
   .benefits-section--mobile :global(.benefit-card.is-active) {
-    background: var(--c-navy, #122941);
-    color: #fff6e2;
+    background: var(--c-navy, #122941) !important;
+    color: #fff6e2 !important;
   }
-  .benefits-section--mobile :global(.benefit-card:not(.is-active)) :global(.benefit-card__body) {
-    max-height: none;
-    opacity: 0.65;
+
+  .benefits-section--mobile :global(.benefit-card.is-active) :global(.benefit-card__body) {
+    display: block !important;
+    inline-size: 100%;
+    max-height: none !important;
+    opacity: 0.8 !important;
+    font-size: 0.75rem !important;
+    line-height: 1.4;
+    text-align: center;
+    transform: none !important;
+  }
+
+  .benefits-section--mobile :global(.benefit-card.is-active) :global(.benefit-card__heading) {
+    color: #fff6e2 !important;
+  }
+
+  /* Fallback icon smaller for 2-col grid */
+  .benefits-section--mobile :global(.benefit-card__fallback) {
+    width: 80% !important;
+    height: 80% !important;
   }
 
   .benefits-section--reduced-motion :global(.benefit-card),
