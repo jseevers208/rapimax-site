@@ -39,7 +39,6 @@
           { label: 'Motocicletas', href: '/servicios#motocicletas' }
         ],
         extras: [
-          { label: 'Calculadora de financiamiento', href: '/contactanos' },
           { label: 'Solicitar financiamiento', href: '/contactanos' }
         ]
       }
@@ -91,7 +90,7 @@
           { label: 'Correo Electrónico', href: '/contactanos' },
           { label: 'Teléfono', href: '/contactanos' }
         ],
-        extraText: 'Horario de atención: Lunes a Viernes 8:00 - 18:00'
+        extraText: 'Horario de atención: Lunes a Viernes 8:00 - 17:30'
       }
     }
   ];
@@ -676,7 +675,7 @@
       <a href="/requisitos" class="mobile-drawer__link" on:click={closeMobileMenu}>Requisitos</a>
       <a href="/contactanos" class="mobile-drawer__link" on:click={closeMobileMenu}>Contáctanos</a>
       <div class="mobile-drawer__divider"></div>
-      <a href="https://wa.me/50671996622" target="_blank" rel="noopener" class="mobile-drawer__link mobile-drawer__link--wa" on:click={closeMobileMenu}>💬 WhatsApp</a>
+      <a href="https://wa.me/50671996622?text=%C2%A1Hola!%20Quiero%20realizar%20mi%20precalificaci%C3%B3n%20con%20RapiMax%20%F0%9F%9B%B5%20%F0%9F%9A%99%0AMi%20n%C3%BAmero%20de%20c%C3%A9dula%20es%3A" target="_blank" rel="noopener" class="mobile-drawer__link mobile-drawer__link--wa" on:click={closeMobileMenu}>💬 WhatsApp</a>
       <a href="tel:+50671996622" class="mobile-drawer__link" on:click={closeMobileMenu}>📞 +506 7199-6622</a>
     </nav>
   {/if}

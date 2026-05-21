@@ -396,7 +396,7 @@
   .whos-rapimax__viewport {
     width: min(100%, 760px);
     display: grid;
-    gap: clamp(64px, 10vh, 140px);
+    gap: clamp(80px, 14vh, 180px);
     justify-items: center;
   }
 
@@ -441,8 +441,8 @@
 
   @media (max-width: 640px), (prefers-reduced-motion: reduce) {
     .whos-rapimax {
-      --whos-container-pad-top: clamp(36px, 6vh, 80px);
-      --whos-container-pad-bottom: clamp(48px, 10vh, 120px);
+      --whos-container-pad-top: clamp(32px, 5vh, 64px);
+      --whos-container-pad-bottom: clamp(36px, 7vh, 80px);
     }
 
     .whos-rapimax__layout {
@@ -451,13 +451,13 @@
 
     .whos-rapimax__viewport {
       width: 100%;
-      gap: clamp(48px, 8vh, 96px);
+      gap: clamp(40px, 7vh, 72px);
     }
 
     .whos-rapimax__copy {
       width: 100%;
-      font-size: clamp(1.9rem, 2vw + 1rem, 3rem);
-      line-height: 1.08;
+      font-size: clamp(1.4rem, 4vw + 0.6rem, 2.2rem);
+      line-height: 1.15;
     }
 
     .whos-rapimax__copy-token {

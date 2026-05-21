@@ -366,6 +366,7 @@
     color: var(--c-navy);
     font-family: 'Nordique Pro', 'Montserrat', serif;
     letter-spacing: -0.04em;
+    text-align: center;
   }
 
   .services-page__intro h1 {
@@ -486,11 +487,12 @@
   }
 
   .service-row__copy p {
-    margin: 0;
+    margin: 0 auto;
     max-width: 42ch;
     color: var(--c-ink-soft);
     font-size: clamp(1rem, 0.25vw + 0.96rem, 1.08rem);
     line-height: 1.6;
+    text-align: center;
   }
 
   .services-cta {

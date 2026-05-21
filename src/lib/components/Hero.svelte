@@ -1260,43 +1260,49 @@
   @media (max-width: 720px) {
     .hero-v2-shell {
       --hero-art-offset-x: 0px;
-      --hero-art-offset-y: -10px;
-      --hero-art-scale: 0.75;
+      --hero-art-offset-y: 0px;
+      --hero-art-scale: 0.6;
     }
 
-    .hero-v2-text h1 { font-size: clamp(1.8rem, 5vw + 0.8rem, 2.8rem); }
+    .hero-v2-text h1 { font-size: clamp(1.6rem, 5vw + 0.6rem, 2.4rem); }
     .hero-v2-mask-content-inner {
       top: var(--hero-safe-top, 0px);
-      align-items: flex-end;
-      justify-content: flex-start;
+      align-items: center;
+      justify-content: flex-end;
       padding:
-        clamp(16px, 3vh, 26px)
-        clamp(12px, 4.5vw, 20px)
-        clamp(14px, 4vh, 30px);
+        clamp(10px, 2vh, 16px)
+        clamp(16px, 5vw, 24px)
+        clamp(20px, 5vh, 40px);
     }
     .hero-v2-svg-frame--full {
       inset: 0;
     }
-    /* Override line + logo opacity for mobile — navy blue, not gray */
     .hero-v2-lines :global(path) {
-      opacity: 0.18 !important;
+      opacity: 0.12 !important;
       stroke: var(--c-navy, #122941) !important;
     }
     .hero-v2-logo :global(path) {
-      opacity: 0.9 !important;
+      opacity: 0.85 !important;
       stroke: var(--c-navy, #122941) !important;
     }
-    /* Make logo larger on mobile */
     .hero-v2-logo {
       transform: scale(1.3);
       transform-origin: center 40%;
     }
     .hero-v2-text--intro {
       padding: 0;
-      max-width: min(90vw, 520px);
+      max-width: min(92vw, 520px);
+      text-align: center;
+      align-items: center;
     }
     .hero-v2-text--intro .hero-v2-subhead {
       white-space: normal;
+      text-align: center;
+      font-size: clamp(0.82rem, 2vw + 0.5rem, 1rem);
+    }
+    :global(.hero-v2-cta--intro) {
+      width: 100%;
+      justify-content: center;
     }
   }
 </style>

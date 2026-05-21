@@ -391,7 +391,7 @@
     margin: 0;
     width: min(42ch, 100%);
     color: rgba(18, 41, 65, 0.86);
-    font-size: clamp(0.95rem, 0.25vw + 0.9rem, 1.04rem);
+    font-size: clamp(1.08rem, 0.3vw + 1rem, 1.18rem);
     line-height: 1.55;
     text-wrap: pretty;
   }
@@ -420,7 +420,7 @@
   @media (max-width: 860px) {
     .financing-options {
       padding-top: clamp(28px, 6vw, 40px);
-      padding-bottom: clamp(84px, 16vw, 128px);
+      padding-bottom: clamp(40px, 8vw, 64px);
     }
 
     .financing-option-row,
@@ -431,6 +431,18 @@
         'content';
     }
 
+    .financing-option__copy {
+      text-align: center;
+      align-items: center;
+    }
+
+    .financing-option__body {
+      text-align: center;
+    }
+
+    .financing-option__button {
+      justify-self: center;
+    }
   }
 
   @media (max-width: 560px) {
@@ -443,7 +455,7 @@
     }
 
     .financing-options__rows {
-      gap: 36px;
+      gap: 28px;
     }
 
     .financing-option__button {

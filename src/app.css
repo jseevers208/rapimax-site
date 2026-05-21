@@ -145,7 +145,8 @@ main {
 
 @media (max-width: 720px) {
   .section-title {
-    width: min(12ch, 100%);
+    width: min(16ch, 100%);
+    font-size: clamp(1.5rem, 4vw + 0.6rem, 2.2rem);
   }
 }
 

@@ -16,7 +16,7 @@
       iconName: 'howitworks-authorized',
       leadLines: ['Preaprobación en menos de'],
       highlight: '1 Hora',
-      body: 'Conocé rápidamente si tu solicitud fue aprobada.'
+      body: 'Conocé rápidamente si tu solicitud fue preaprobada.'
     },
     {
       iconName: 'howitworks-steeringwheel',
@@ -831,7 +831,7 @@
 
   @media (max-width: 720px) {
     .how-it-works {
-      padding: clamp(28px, 6vw, 40px) 0 clamp(64px, 12vw, 88px);
+      padding: clamp(24px, 5vw, 36px) 0 clamp(32px, 6vw, 48px);
     }
 
     .how-it-works__shell {
