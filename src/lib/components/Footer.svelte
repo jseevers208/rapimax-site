@@ -38,7 +38,7 @@
 
   <div class="container footer-grid">
     <div class="footer-contact">
-      <span class="footer-title">Contáctanos</span>
+      <span class="footer-title">Contactanos</span>
       <a href="tel:+50671996622">+506 7199-6622</a>
       <a class="email-link" href="mailto:info@rapimax-dev.com">info@rapimax-dev.com</a>
       <div class="social-icons" aria-label="Redes sociales">
@@ -51,7 +51,7 @@
       <span class="footer-title">Enlaces rápidos</span>
       <a href={resolveHref('#inicio')}>Quiénes somos</a>
       <a href="/servicios">Vehículos</a>
-      <a href="/contactanos">Contáctanos</a>
+      <a href="/contactanos">Contactanos</a>
     </div>
     <div class="footer-legal">
       <span class="footer-title">Legal</span>
@@ -195,8 +195,66 @@
   }
 
   @media (max-width: 900px) {
-    .footer-grid        { grid-template-columns: 1fr; }
-    .footer-holdings    { justify-self: start; }
+    .footer {
+      padding: 30px 0 46px;
+    }
+
+    .footer-logo-band {
+      margin-top: -4px;
+      margin-bottom: 22px;
+    }
+
+    .footer-mark {
+      width: clamp(128px, 42vw, 190px);
+    }
+
+    .footer-grid {
+      width: min(430px, 100%);
+      grid-template-columns: minmax(0, 1fr);
+      justify-items: center;
+      gap: 30px;
+      text-align: center;
+    }
+
+    .footer-contact,
+    .footer-links,
+    .footer-legal,
+    .legal-links {
+      width: 100%;
+      justify-items: center;
+    }
+
+    .footer-contact,
+    .footer-links,
+    .footer-legal {
+      justify-self: stretch;
+    }
+
+    .social-icons {
+      justify-content: center;
+      margin-top: 8px;
+    }
+
+    .email-link {
+      overflow-wrap: anywhere;
+    }
+
+    .footer-holdings {
+      width: min(160px, 58vw);
+      justify-self: center;
+      margin-top: 8px;
+    }
+  }
+
+  @media (max-width: 520px) {
+    .footer {
+      padding-bottom: 40px;
+    }
+
+    .footer-grid {
+      gap: 28px;
+      padding-inline: 22px;
+    }
   }
 
   @media (prefers-reduced-motion: reduce) {

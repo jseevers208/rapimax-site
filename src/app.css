@@ -221,6 +221,35 @@ main {
   border-color: rgba(255, 246, 226, 0.75);
 }
 
+/* ─── Mobile / touch: disable hover effects, glow ────── */
+@media (max-width: 720px), (hover: none), (pointer: coarse) {
+  .btn {
+    transition: none;
+  }
+
+  .btn.primary:hover,
+  .btn.primary:focus-visible {
+    transform: none;
+    box-shadow: 0 12px 24px rgba(213, 181, 132, 0.35);
+  }
+
+  .btn.ghost:hover,
+  .btn.ghost:focus-visible {
+    transform: none;
+    border-color: rgba(18, 41, 65, 0.35);
+  }
+
+  .btn.light:hover,
+  .btn.light:focus-visible {
+    transform: none;
+    border-color: rgba(255, 246, 226, 0.55);
+  }
+
+  .glow-ring__glow {
+    display: none !important;
+  }
+}
+
 @media (max-width: 720px) {
   .section {
     padding: clamp(28px, 6vw, 40px) 0;

@@ -6,38 +6,38 @@
 
   const DESKTOP_BREAKPOINT = 1080;
   const MOBILE_BREAKPOINT = 640;
-  const WEBGL_BREAKPOINT = 820;
+  const WEBGL_BREAKPOINT = 320;
 
   const benefits = [
     {
       iconName: 'why-lightning',
+      iconSvg: '<svg viewBox="0 0 96 96" aria-hidden="true"><path d="M52 6 18 55h26l-6 35 40-55H50L52 6Z" fill="currentColor"/></svg>',
       title: 'Agilidad',
-      body: 'Aplicá en minutos y obtené respuesta en menos de 1 hora.',
-      mobileSvg: '<svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M28 4L12 28h12l-4 16 16-24H24l4-16z" fill="currentColor" opacity="0.9"/></svg>'
+      body: 'Aplicá en minutos y obtené respuesta en menos de 1 hora.'
     },
     {
       iconName: 'why-stopwatch',
+      iconSvg: '<svg viewBox="0 0 96 96" aria-hidden="true"><path d="M38 8h20v10H38V8Zm5 44V28h10v28l17 10-5 9-22-13V52Z" fill="currentColor"/><path d="M48 16c-19.3 0-35 15.7-35 35s15.7 35 35 35 35-15.7 35-35S67.3 16 48 16Zm0 10c13.8 0 25 11.2 25 25S61.8 76 48 76 23 64.8 23 51s11.2-25 25-25Z" fill="currentColor"/></svg>',
       title: 'Rapidez',
-      body: 'Estrená tu vehículo en menos de 24 horas una vez aprobado tu financiamiento.',
-      mobileSvg: '<svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="24" cy="26" r="16" stroke="currentColor" stroke-width="3" fill="none"/><path d="M24 16v10l7 5" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><path d="M20 4h8M24 4v6" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg>'
+      body: 'Estrená tu vehículo en menos de 24 horas una vez aprobado tu financiamiento.'
     },
     {
       iconName: 'why-digital',
+      iconSvg: '<svg viewBox="0 0 96 96" aria-hidden="true"><path d="M18 18h60c5 0 9 4 9 9v35c0 5-4 9-9 9H58v7h12v8H26v-8h12v-7H18c-5 0-9-4-9-9V27c0-5 4-9 9-9Zm2 10v33h56V28H20Zm19 8h18v8H39v-8Zm-10 14h38v8H29v-8Z" fill="currentColor"/></svg>',
       title: '100% digital',
-      body: 'Un proceso simple, rápido y eficiente.',
-      mobileSvg: '<svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="14" y="6" width="20" height="36" rx="4" stroke="currentColor" stroke-width="3" fill="none"/><circle cx="24" cy="36" r="2" fill="currentColor"/><circle cx="34" cy="34" r="10" stroke="currentColor" stroke-width="2.5" fill="none"/><path d="M30 34h4M34 30v4M37 31l-3 3M31 37l3-3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>'
+      body: 'Un proceso simple, rápido y eficiente.'
     },
     {
       iconName: 'why-gear',
+      iconSvg: '<svg viewBox="0 0 96 96" aria-hidden="true"><path d="M54 7 58 18c2.2.7 4.3 1.6 6.2 2.6l10.7-5 8.5 8.5-5 10.7c1 1.9 1.9 4 2.6 6.2l11 4v12l-11 4a34.8 34.8 0 0 1-2.6 6.2l5 10.7-8.5 8.5-10.7-5c-1.9 1-4 1.9-6.2 2.6l-4 11H42l-4-11a34.8 34.8 0 0 1-6.2-2.6l-10.7 5-8.5-8.5 5-10.7c-1-1.9-1.9-4-2.6-6.2l-11-4V45l11-4c.7-2.2 1.6-4.3 2.6-6.2l-5-10.7 8.5-8.5 10.7 5c1.9-1 4-1.9 6.2-2.6l4-11h12ZM48 36a12 12 0 1 0 0 24 12 12 0 0 0 0-24Z" fill="currentColor"/></svg>',
       title: 'Flexibilidad',
-      body: 'Soluciones de financiamiento adaptadas a cada cliente.',
-      mobileSvg: '<svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M24 30a6 6 0 100-12 6 6 0 000 12z" stroke="currentColor" stroke-width="3" fill="none"/><path d="M26 8h-4l-1 4-3.5 1.5L14 11l-3 3 2.5 3.5L12 21l-4 1v4l4 1 1.5 3.5L11 34l3 3 3.5-2.5L21 36l1 4h4l1-4 3.5-1.5L34 37l3-3-2.5-3.5L36 27l4-1v-4l-4-1-1.5-3.5L37 14l-3-3-3.5 2.5L27 12l-1-4z" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linejoin="round"/><path d="M32 18l-2 2" stroke="currentColor" stroke-width="3" stroke-linecap="round"/><circle cx="35" cy="15" r="3" fill="currentColor" opacity="0.7"/></svg>'
+      body: 'Soluciones de financiamiento adaptadas a cada cliente.'
     },
     {
       iconName: 'why-handshake',
+      iconSvg: '<svg viewBox="0 0 96 96" aria-hidden="true"><path d="M15 40 34 22c6-5.7 14.7-6.3 21.3-1.5L61 24h13c4.4 0 8 3.6 8 8v29h-8.6l-9.8 10c-6.3 6.4-16.6 6.4-22.9 0L15 45.2V40Zm27.8-11.1L28.5 42.4l20.7 20.7c2.4 2.4 6.3 2.4 8.7 0l13-13V34H58.2L49 28.2c-1.9-1.2-4.4-1-6.2.7Z" fill="currentColor"/><path d="M44 35 32 47l-7-7 12-12 7 7Zm12 12-7 7-16-16 7-7 16 16Z" fill="currentColor"/></svg>',
       title: 'Atención personalizada',
-      body: 'Asesores reales te acompañan durante todo el proceso.',
-      mobileSvg: '<svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M8 22l6-6a4 4 0 013-1h4l8-4a2 2 0 012.2.4L35 16h5a2 2 0 012 2v2a2 2 0 01-2 2h-3l-8 8-6-2-4 4" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/><path d="M20 30l4 2 6-6" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 20h4v14H4z" rx="1" fill="currentColor" opacity="0.3"/><path d="M40 14h4v10h-4z" rx="1" fill="currentColor" opacity="0.3"/></svg>'
+      body: 'Asesores reales te acompañan durante todo el proceso.'
     }
   ];
 
@@ -110,15 +110,15 @@
   };
 
   const syncRendererPauseState = () => {
-    const paused = !isSectionVisible || isMobile;
+    const paused = !isSectionVisible;
     renderers.forEach((renderer) => {
       renderer?.setPaused(paused);
-      renderer?.setReducedMotion(reduceMotion);
+      renderer?.setReducedMotion(reduceMotion || isMobile);
     });
   };
 
   const canUseWebgl = () =>
-    typeof window !== 'undefined' && window.innerWidth >= WEBGL_BREAKPOINT && !isMobile;
+    typeof window !== 'undefined' && window.innerWidth >= WEBGL_BREAKPOINT;
 
   const getRendererInitOrder = () => {
     const order = [activeBenefitIndex];
@@ -141,8 +141,10 @@
     try {
       const renderer = new BakedIconScene(canvas, iconAtlasUrl, {
         iconName: benefits[index].iconName,
-        reduceMotion,
-        maxPixelRatio: 1.25,
+        reduceMotion: reduceMotion || isMobile,
+        maxPixelRatio: isMobile ? 1 : 1.25,
+        initialPointerX: isMobile ? -0.9 : 0,
+        initialPointerY: isMobile ? 0.22 : 0,
         onReady: () => setWebglReadyAtIndex(index, true),
         onError: () => setWebglReadyAtIndex(index, false)
       });
@@ -210,6 +212,7 @@
   };
 
   const setRendererPointerFromEvent = (event, index) => {
+    if (isMobile) return;
     const renderer = renderers[index];
     if (!renderer) return;
 
@@ -225,6 +228,7 @@
   };
 
   const clearRendererPointer = (index) => {
+    if (isMobile) return;
     renderers[index]?.setPointer(0, 0);
   };
 
@@ -347,6 +351,7 @@
           outlineWidth="0"
           fillContent={true}
           on:mouseenter={() => setActiveBenefit(index)}
+          on:click={() => setActiveBenefit(index)}
           on:focus={() => setActiveBenefit(index)}
           on:keydown={(event) => handleCardKeydown(event.detail, index)}
           on:pointerenter={() => setActiveBenefit(index)}
@@ -362,10 +367,9 @@
             ></canvas>
 
             {#if !webglReady[index]}
-              <span class="benefit-card__fallback" aria-hidden="true"></span>
-            {/if}
-            {#if isMobile && benefit.mobileSvg}
-              <span class="benefit-card__mobile-icon" aria-hidden="true">{@html benefit.mobileSvg}</span>
+              <span class="benefit-card__fallback" aria-hidden="true">
+                {@html benefit.iconSvg}
+              </span>
             {/if}
           </span>
 
@@ -502,13 +506,30 @@
   :global(.benefit-card__fallback) {
     width: 64%;
     height: 64%;
-    border-radius: 30%;
-    background:
-      radial-gradient(circle at 35% 28%, rgba(255, 246, 226, 0.86), rgba(213, 181, 132, 0.24) 35%, transparent 36%),
-      linear-gradient(135deg, rgba(213, 181, 132, 0.95), rgba(18, 41, 65, 0.9));
-    box-shadow:
-      inset 0 0 0 1px rgba(255, 246, 226, 0.2),
-      0 16px 26px rgba(1, 13, 40, 0.34);
+    display: grid;
+    place-items: center;
+    color: var(--c-navy);
+    border-radius: 28%;
+    background: rgba(213, 181, 132, 0.16);
+    box-shadow: inset 0 0 0 1px rgba(18, 41, 65, 0.08);
+    transition:
+      color 240ms ease,
+      background-color 240ms ease,
+      box-shadow 240ms ease;
+  }
+
+  :global(.benefit-card__fallback svg) {
+    width: 72%;
+    height: 72%;
+    display: block;
+  }
+
+  :global(.benefit-card.is-active) :global(.benefit-card__fallback),
+  :global(.benefit-card):hover :global(.benefit-card__fallback),
+  :global(.benefit-card):focus-visible :global(.benefit-card__fallback) {
+    color: var(--c-crema);
+    background: rgba(213, 181, 132, 0.2);
+    box-shadow: inset 0 0 0 1px rgba(255, 246, 226, 0.18);
   }
 
   :global(.benefit-card__copy) {
@@ -609,124 +630,108 @@
 
   .benefits-section--mobile {
     padding-top: clamp(28px, 6vw, 40px);
-    padding-bottom: clamp(36px, 8vw, 56px);
+    padding-bottom: clamp(56px, 12vw, 84px);
   }
 
   .benefits-section--mobile .benefits-shell {
-    gap: clamp(20px, 4vw, 28px);
-  }
-
-  /* 2-column grid of compact cards */
-  .benefits-section--mobile .benefits-rail {
-    grid-template-columns: 1fr 1fr !important;
-    gap: 10px;
-  }
-
-  /* Reset absolute positioning — make cards flow naturally */
-  .benefits-section--mobile :global(.benefit-card) {
     width: 100%;
-    min-height: auto !important;
-    padding: 20px 16px !important;
-    display: flex !important;
-    flex-direction: column !important;
-    align-items: center !important;
-    justify-content: center !important;
-    text-align: center;
-    gap: 12px;
-    aspect-ratio: 1 / 1;
-    border-radius: 20px !important;
+    padding: 0 clamp(10px, 2.8vw, 16px);
+    gap: clamp(24px, 5vw, 32px);
   }
 
-  /* Force media out of absolute positioning */
+  .benefits-section--mobile .benefits-rail {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .benefits-section--mobile :global(.benefit-card) {
+    --benefit-mobile-icon-size: clamp(164px, 45vw, 190px);
+    --benefit-mobile-gap: clamp(8px, 2.8vw, 14px);
+    width: 100%;
+    min-height: calc(var(--benefit-mobile-icon-size) + 56px);
+    padding: 0;
+  }
+
+  .benefits-section--mobile :global(.benefit-card > .glow-ring__content--fill) {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.12fr);
+    align-items: center;
+    gap: var(--benefit-mobile-gap);
+    padding: 24px clamp(16px, 4vw, 20px);
+  }
+
   .benefits-section--mobile :global(.benefit-card__media),
   .benefits-section--mobile :global(.benefit-card.is-active) :global(.benefit-card__media) {
-    position: static !important;
-    width: 56px !important;
-    height: 56px !important;
-    transform: none !important;
-    opacity: 1 !important;
-    flex-shrink: 0;
+    position: relative;
+    grid-column: 2;
+    top: auto;
+    right: auto;
+    justify-self: center;
+    width: min(var(--benefit-mobile-icon-size), 100%);
+    height: auto;
+    aspect-ratio: 1;
+    transform: none;
+    opacity: 1;
   }
 
-  /* Force copy out of absolute positioning */
-  .benefits-section--mobile :global(.benefit-card__copy) {
-    position: static !important;
-    left: auto !important;
-    right: auto !important;
-    bottom: auto !important;
+  .benefits-section--mobile :global(.benefit-card:not(.is-active)) :global(.benefit-card__media) {
+    transform: none;
+    opacity: 1;
+  }
+
+  .benefits-section--mobile :global(.benefit-card__fallback) {
+    width: 100%;
+    height: 100%;
+    background: rgba(213, 181, 132, 0.14);
+  }
+
+  .benefits-section--mobile :global(.benefit-card__fallback svg) {
+    width: 82%;
+    height: 82%;
+  }
+
+  .benefits-section--mobile :global(.benefit-card__copy),
+  .benefits-section--mobile :global(.benefit-card.is-active) :global(.benefit-card__copy) {
+    position: relative;
+    grid-column: 1;
+    grid-row: 1;
+    top: auto;
+    left: auto;
+    right: auto;
+    bottom: auto;
+    align-self: center;
+    width: 100%;
+    height: var(--benefit-mobile-icon-size);
     display: flex;
     flex-direction: column;
-    align-items: center;
-    gap: 4px;
+    justify-content: space-between;
+    gap: 12px;
+    transform: none;
   }
 
-  .benefits-section--mobile :global(.benefit-card__heading) {
-    max-width: none !important;
-    font-size: 0.88rem !important;
-    text-align: center;
-    transform: none !important;
-    opacity: 1 !important;
+  .benefits-section--mobile :global(.benefit-card__body),
+  .benefits-section--mobile :global(.benefit-card.is-active) :global(.benefit-card__body) {
+    inline-size: 100%;
+    max-height: none;
+    opacity: 1;
+    transform: none;
+    font-size: clamp(0.95rem, 3.8vw, 1.12rem);
+    line-height: 1.42;
   }
 
-  /* Hide body text on non-active cards — too small for 2-col */
-  .benefits-section--mobile :global(.benefit-card__body) {
-    display: none !important;
+  .benefits-section--mobile :global(.benefit-card__heading),
+  .benefits-section--mobile :global(.benefit-card.is-active) :global(.benefit-card__heading) {
+    max-width: 8ch;
+    font-size: clamp(1.25rem, 6vw, 1.72rem);
+    line-height: 1.02;
+    transform: none;
   }
 
-  /* Active card: show body text, navy background */
-  .benefits-section--mobile :global(.benefit-card.is-active) {
-    background: var(--c-navy, #122941) !important;
-    color: #fff6e2 !important;
+  .benefits-section--mobile :global(.benefit-card:not(.is-active)) :global(.benefit-card__body) {
+    color: rgba(18, 41, 65, 0.82);
   }
 
   .benefits-section--mobile :global(.benefit-card.is-active) :global(.benefit-card__body) {
-    display: block !important;
-    inline-size: 100%;
-    max-height: none !important;
-    opacity: 0.8 !important;
-    font-size: 0.75rem !important;
-    line-height: 1.4;
-    text-align: center;
-    transform: none !important;
-  }
-
-  .benefits-section--mobile :global(.benefit-card.is-active) :global(.benefit-card__heading) {
-    color: #fff6e2 !important;
-  }
-
-  /* Fallback icon hidden on mobile — SVG takes over */
-  .benefits-section--mobile :global(.benefit-card__fallback) {
-    display: none !important;
-  }
-  .benefits-section--mobile :global(.benefit-card__canvas) {
-    display: none !important;
-  }
-
-  /* Mobile SVG icon */
-  .benefits-section--mobile :global(.benefit-card__mobile-icon) {
-    display: block;
-    width: 100%;
-    height: 100%;
-    color: var(--c-navy, #122941);
-  }
-  .benefits-section--mobile :global(.benefit-card__mobile-icon) :global(svg) {
-    width: 100%;
-    height: 100%;
-  }
-  .benefits-section--mobile :global(.benefit-card.is-active) :global(.benefit-card__mobile-icon) {
-    color: #d5b584;
-  }
-
-  /* Center the 5th (last odd) card across both columns */
-  .benefits-section--mobile .benefits-rail :global(.benefit-card:last-child:nth-child(odd)) {
-    grid-column: 1 / -1;
-    max-width: calc(50% - 5px);
-    justify-self: center;
-  }
-
-  /* Hide mobile icon on desktop */
-  :global(.benefit-card__mobile-icon) {
-    display: none;
+    color: rgba(255, 246, 226, 0.9);
   }
 
   .benefits-section--reduced-motion :global(.benefit-card),

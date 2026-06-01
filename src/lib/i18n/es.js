@@ -6,7 +6,7 @@ export const es = {
     calculator: 'Calculadora',
     requirements: 'Requisitos',
     application: 'Solicitud',
-    contact: 'Contáctanos',
+    contact: 'Contactanos',
   },
 
   // Homepage

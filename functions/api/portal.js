@@ -37,7 +37,7 @@ export async function onRequestGet(context) {
     const statusMessages = {
       nueva: { title: 'Solicitud recibida', desc: 'Estamos revisando tu información. Un asesor te contactará pronto.', color: '#d5b584' },
       'en-proceso': { title: 'En proceso', desc: 'Un asesor está trabajando en tu solicitud.', color: '#5b8fd9' },
-      contactada: { title: 'Te contactamos', desc: 'Un asesor se comunicó contigo. Si no recibiste la llamada, por favor contáctanos.', color: '#8b5cf6' },
+      contactada: { title: 'Te contactamos', desc: 'Un asesor se comunicó contigo. Si no recibiste la llamada, por favor contactanos.', color: '#8b5cf6' },
       documentos: { title: 'Documentos pendientes', desc: 'Necesitamos documentación adicional para continuar con tu solicitud.', color: '#f59e0b' },
       'en-revision': { title: 'En revisión', desc: 'Tu solicitud está en revisión final. Te notificaremos pronto.', color: '#6366f1' },
       aprobada: { title: '¡Aprobada!', desc: '¡Felicidades! Tu financiamiento fue aprobado. Un asesor te contactará con los próximos pasos.', color: '#22c55e' },

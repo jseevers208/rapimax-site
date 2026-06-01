@@ -294,7 +294,7 @@
   };
 
   const updateLogoGlowInteractivity = () => {
-    const shouldTrack = heroInView && supportsInteractiveLogoGlow && !prefersReducedMotion && pinState !== 'after';
+    const shouldTrack = heroInView && supportsInteractiveLogoGlow && !isMobileStaticLayout && !prefersReducedMotion && pinState !== 'after';
     if (shouldTrack) {
       bindLogoGlowListeners();
     } else {
@@ -336,6 +336,19 @@
   const LOGO_GLOW_IDLE_ORBIT_RADIUS_X = 0.46;
   const LOGO_GLOW_IDLE_ORBIT_RADIUS_Y = 0.36;
   const LOGO_GLOW_IDLE_ORBIT_TILT = -0.3;
+  const MOBILE_STATIC_QUERY = '(max-width: 720px), (hover: none), (pointer: coarse)';
+  let isMobileStaticLayout = false;
+
+  const syncMobileStaticLayout = () => {
+    if (typeof window === 'undefined') return;
+    isMobileStaticLayout = window.matchMedia(MOBILE_STATIC_QUERY).matches;
+    if (!isMobileStaticLayout || !heroViewport) return;
+    const vs = heroViewport.style;
+    vs.position = '';
+    vs.top = '';
+    vs.bottom = '';
+    vs.zIndex = '';
+  };
 
   const buildGeometry = (svgElement, configs, { stroke, opacity = 1 }) =>
     Array.from(svgElement.querySelectorAll('path'))
@@ -577,7 +590,7 @@
       stopLogoLoop({ resetStroke: false });
       return;
     }
-    const shouldLoop = heroInView && !prefersReducedMotion && pinState !== 'after' && !logoIntroActive;
+    const shouldLoop = heroInView && !prefersReducedMotion && !logoIntroActive && (isMobileStaticLayout || pinState !== 'after');
     if (shouldLoop) {
       startLogoLoop();
     } else {
@@ -593,6 +606,20 @@
     const shellTop = heroShell.offsetTop;
     const shellBottom = shellTop + heroShell.offsetHeight;
     const nextHeroInView = scrollTop + window.innerHeight > shellTop && scrollTop < shellBottom;
+    if (isMobileStaticLayout) {
+      if (nextHeroInView !== heroInView) {
+        heroInView = nextHeroInView;
+        setHeroActiveClass(heroInView);
+        lastAppliedProgress = -1;
+        if (!heroInView) {
+          unbindLogoGlowListeners();
+        }
+      }
+      pinState = 'before';
+      scrollProgress = 0;
+      syncMobileStaticLayout();
+      return;
+    }
     const totalScrollDistance = heroShell.offsetHeight - window.innerHeight;
     if (totalScrollDistance <= 0) {
       scrollProgress = 0;
@@ -704,6 +731,7 @@
   }
 
   function onResize() {
+    syncMobileStaticLayout();
     invalidateLogoGlowMetrics();
     lastAppliedProgress = -1;
     onScroll();
@@ -719,6 +747,7 @@
 
     prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     supportsInteractiveLogoGlow = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+    syncMobileStaticLayout();
 
     if (heroShell) heroShell.style.setProperty('--total-multiplier', TOTAL_MULTIPLIER);
     if (!prefersReducedMotion) {
@@ -1259,50 +1288,104 @@
 
   @media (max-width: 720px) {
     .hero-v2-shell {
+      height: auto;
+      min-height: 100svh;
       --hero-art-offset-x: 0px;
       --hero-art-offset-y: 0px;
-      --hero-art-scale: 0.6;
+      --hero-art-scale: 1.12;
+      --hero-drop-shadow: none;
     }
 
-    .hero-v2-text h1 { font-size: clamp(1.6rem, 5vw + 0.6rem, 2.4rem); }
+    .hero-v2-shell::before {
+      height: 100%;
+    }
+
+    .hero-v2 {
+      position: relative !important;
+      top: auto !important;
+      bottom: auto !important;
+      height: auto;
+      min-height: 100svh;
+      border-bottom-left-radius: 0;
+      border-bottom-right-radius: 0;
+      box-shadow: none;
+    }
+
     .hero-v2-mask-content-inner {
-      top: var(--hero-safe-top, 0px);
-      align-items: center;
-      justify-content: flex-end;
+      top: 0;
+      display: grid;
+      grid-template-rows: minmax(350px, 54svh) auto;
+      align-content: start;
+      align-items: end;
+      justify-items: start;
       padding:
-        clamp(10px, 2vh, 16px)
-        clamp(16px, 5vw, 24px)
-        clamp(20px, 5vh, 40px);
+        calc(var(--hero-safe-top, 0px) + clamp(14px, 3svh, 24px))
+        clamp(18px, 5vw, 24px)
+        max(26px, env(safe-area-inset-bottom));
     }
+
     .hero-v2-svg-frame--full {
-      inset: 0;
+      inset: auto;
+      top: calc(var(--hero-safe-top, 0px) + clamp(22px, 4.5svh, 44px));
+      left: 50%;
+      width: min(184vw, 780px);
+      height: min(68svh, 620px);
+      aspect-ratio: 1920 / 2643.17;
+      transform: translateX(-50%) scale(var(--hero-art-scale));
+      transform-origin: top center;
     }
-    .hero-v2-lines :global(path) {
-      opacity: 0.12 !important;
-      stroke: var(--c-navy, #122941) !important;
-    }
-    .hero-v2-logo :global(path) {
-      opacity: 0.85 !important;
-      stroke: var(--c-navy, #122941) !important;
-    }
-    .hero-v2-logo {
-      transform: scale(1.3);
-      transform-origin: center 40%;
-    }
+
     .hero-v2-text--intro {
+      grid-row: 2;
       padding: 0;
-      max-width: min(92vw, 520px);
-      text-align: center;
-      align-items: center;
+      max-width: min(88vw, 520px);
     }
+
+    .hero-v2-text--intro h1 {
+      max-width: 13ch;
+      margin-bottom: 8px;
+      font-size: clamp(2.05rem, 9vw, 2.78rem);
+      line-height: 1.08;
+    }
+
     .hero-v2-text--intro .hero-v2-subhead {
+      max-width: 31ch;
       white-space: normal;
-      text-align: center;
-      font-size: clamp(0.82rem, 2vw + 0.5rem, 1rem);
     }
-    :global(.hero-v2-cta--intro) {
-      width: 100%;
-      justify-content: center;
+
+    :global(.hero-v2-cta),
+    :global(.btn.primary.hero-v2-cta) {
+      width: fit-content;
+      min-height: 46px;
+      transform: none;
+    }
+
+    :global(.hero-v2-cta):hover,
+    :global(.hero-v2-cta):focus-visible {
+      transform: none;
+      box-shadow: 0 14px 28px rgba(1, 13, 40, 0.35);
+    }
+
+    :global(.hero-v2-cta .glow-ring__glow),
+    .hero-v2-logo-glow-hit,
+    .hero-v2-logo-glow-aura--hover {
+      display: none;
+    }
+  }
+
+  @media (max-width: 380px) {
+    .hero-v2-mask-content-inner {
+      grid-template-rows: minmax(320px, 51svh) auto;
+    }
+
+    .hero-v2-svg-frame--full {
+      top: calc(var(--hero-safe-top, 0px) + clamp(18px, 4svh, 34px));
+      width: min(188vw, 680px);
+      height: min(62svh, 500px);
+    }
+
+    .hero-v2-text--intro h1 {
+      font-size: clamp(1.95rem, 8.6vw, 2.35rem);
     }
   }
 </style>

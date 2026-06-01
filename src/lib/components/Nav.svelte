@@ -74,7 +74,7 @@
     },
     {
       id: 'contacto',
-      label: 'Contáctanos',
+      label: 'Contactanos',
       href: '/contactanos',
       dropdown: {
         image: contactImg,
@@ -95,8 +95,18 @@
     }
   ];
   const navDefault = 'logo';
+  const mobileNavLinks = [
+    { id: 'home', label: 'Inicio', href: '/', pageId: 'home' },
+    { id: 'services', label: 'Productos', href: '/servicios', pageId: 'services' },
+    { id: 'requirements', label: 'Requisitos', href: '/requisitos', pageId: 'requirements' },
+    { id: 'contact', label: 'Contactanos', href: '/contactanos', pageId: 'contact' }
+  ];
+  const mobileCtaLinks = [
+    { label: 'Contactanos', href: '/contactanos' }
+  ];
 
   let logoHighlighted = true;
+  let mobileMenuOpen = false;
 
   function handleMouseEnter(item) {
     clearTimeout(dropdownTimeout);
@@ -116,6 +126,19 @@
 
   function handleDropdownEnter() {
     clearTimeout(dropdownTimeout);
+  }
+
+  function closeMobileMenu() {
+    mobileMenuOpen = false;
+  }
+
+  function toggleMobileMenu() {
+    mobileMenuOpen = !mobileMenuOpen;
+    if (mobileMenuOpen) {
+      activeDropdown = null;
+      closeSearch();
+      clearTimeout(dropdownTimeout);
+    }
   }
 
   const dispatch = createEventDispatcher();
@@ -320,10 +343,6 @@
   // Search
   let searchOpen = false;
   let searchValue = '';
-  let mobileMenuOpen = false;
-
-  function toggleMobileMenu() { mobileMenuOpen = !mobileMenuOpen; }
-  function closeMobileMenu() { mobileMenuOpen = false; }
   let searchInputRef;
 
   function openSearch() {
@@ -380,7 +399,11 @@
     };
     window.addEventListener('resize', onResize);
     window.visualViewport?.addEventListener('resize', onResize);
-    const onKeydown = (e) => { if (e.key === 'Escape' && searchOpen) closeSearch(); };
+    const onKeydown = (e) => {
+      if (e.key !== 'Escape') return;
+      if (searchOpen) closeSearch();
+      if (mobileMenuOpen) closeMobileMenu();
+    };
     window.addEventListener('keydown', onKeydown);
     requestAnimationFrame(() => {
       updateHeroSafeTop();
@@ -523,14 +546,7 @@
           </div>
         </nav>
 
-        <!-- Mobile hamburger -->
-        <button class="mobile-burger" on:click={toggleMobileMenu} aria-label="Menú">
-          {#if mobileMenuOpen}
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M6 6L18 18M18 6L6 18" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
-          {:else}
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
-          {/if}
-        </button>
+        <!-- HIDDEN: Ingresar/Lista de espera — re-enable later -->
         <div class="actions" style="display:none">
           <div
             class="auth-switch"
@@ -551,7 +567,7 @@
             <a
               class="auth-btn"
               class:highlighted={authActive === 'login'}
-              href="/ingresar"
+              href="#login"
               bind:this={loginRef}
               on:pointerenter={(event) => handleAuthHover('login', event)}
               on:pointermove={(event) => handleAuthPointerMove('login', event)}
@@ -571,7 +587,47 @@
             </a>
           </div>
         </div>
+
+        <button
+          class="mobile-menu-toggle"
+          type="button"
+          aria-label={mobileMenuOpen ? 'Cerrar menú' : 'Abrir menú'}
+          aria-expanded={mobileMenuOpen}
+          aria-controls="mobile-menu"
+          on:click={toggleMobileMenu}
+        >
+          <span class="mobile-menu-toggle__line"></span>
+          <span class="mobile-menu-toggle__line"></span>
+          <span class="mobile-menu-toggle__line"></span>
+        </button>
       </div>
+
+      {#if mobileMenuOpen}
+        <nav id="mobile-menu" class="mobile-menu" aria-label="Navegación móvil">
+          <div class="mobile-menu__links">
+            {#each mobileNavLinks as item (item.id)}
+              <a
+                class={`mobile-menu__link ${page === item.pageId ? 'is-active' : ''}`.trim()}
+                href={item.href}
+                on:click={closeMobileMenu}
+              >
+                <span>{item.label}</span>
+              </a>
+            {/each}
+          </div>
+          <div class="mobile-menu__actions" aria-label="Acciones principales">
+            {#each mobileCtaLinks as item (item.href)}
+              <a
+                class="mobile-menu__cta"
+                href={item.href}
+                on:click={closeMobileMenu}
+              >
+                {item.label}
+              </a>
+            {/each}
+          </div>
+        </nav>
+      {/if}
 
       {#if activeDropdown !== null}
         <!-- svelte-ignore a11y-no-static-element-interactions -->
@@ -665,20 +721,6 @@
       {/if}
     </div>
   </header>
-
-  <!-- Mobile drawer -->
-  {#if mobileMenuOpen}
-    <!-- svelte-ignore a11y-click-events-have-key-events a11y-no-static-element-interactions -->
-    <div class="mobile-overlay" on:click={closeMobileMenu}></div>
-    <nav class="mobile-drawer" aria-label="Menú móvil">
-      <a href="/servicios" class="mobile-drawer__link" on:click={closeMobileMenu}>Nuestros productos</a>
-      <a href="/requisitos" class="mobile-drawer__link" on:click={closeMobileMenu}>Requisitos</a>
-      <a href="/contactanos" class="mobile-drawer__link" on:click={closeMobileMenu}>Contáctanos</a>
-      <div class="mobile-drawer__divider"></div>
-      <a href="https://wa.me/50671996622?text=%C2%A1Hola!%20Quiero%20realizar%20mi%20precalificaci%C3%B3n%20con%20RapiMax%20%F0%9F%9B%B5%20%F0%9F%9A%99%0AMi%20n%C3%BAmero%20de%20c%C3%A9dula%20es%3A" target="_blank" rel="noopener" class="mobile-drawer__link mobile-drawer__link--wa" on:click={closeMobileMenu}>💬 WhatsApp</a>
-      <a href="tel:+50671996622" class="mobile-drawer__link" on:click={closeMobileMenu}>📞 +506 7199-6622</a>
-    </nav>
-  {/if}
 </div>
 
 <style>
@@ -910,6 +952,55 @@
     margin-right: 8px;
     position: relative;
     z-index: 1;
+  }
+
+  .mobile-menu-toggle {
+    display: none;
+    align-items: center;
+    justify-content: center;
+    width: 42px;
+    height: 42px;
+    padding: 0;
+    border: 1px solid rgba(18, 41, 65, 0.14);
+    border-radius: 999px;
+    background: #ffffff;
+    color: var(--c-navy-deep);
+    box-shadow: 0 8px 16px rgba(1, 13, 40, 0.1);
+    cursor: pointer;
+    position: relative;
+    z-index: 2;
+  }
+
+  .mobile-menu-toggle__line {
+    position: absolute;
+    width: 18px;
+    height: 2px;
+    border-radius: 999px;
+    background: currentColor;
+  }
+
+  .mobile-menu-toggle__line:nth-child(1) {
+    transform: translateY(-6px);
+  }
+
+  .mobile-menu-toggle__line:nth-child(3) {
+    transform: translateY(6px);
+  }
+
+  .mobile-menu-toggle[aria-expanded='true'] .mobile-menu-toggle__line:nth-child(1) {
+    transform: rotate(45deg);
+  }
+
+  .mobile-menu-toggle[aria-expanded='true'] .mobile-menu-toggle__line:nth-child(2) {
+    opacity: 0;
+  }
+
+  .mobile-menu-toggle[aria-expanded='true'] .mobile-menu-toggle__line:nth-child(3) {
+    transform: rotate(-45deg);
+  }
+
+  .mobile-menu {
+    display: none;
   }
 
   .auth-switch {
@@ -1443,74 +1534,117 @@
 
   @media (max-width: 900px) {
     .nav-wrapper {
-      padding-top: 16px;
+      padding-top: 8px;
+    }
+
+    .nav-card {
+      width: calc(100vw - 16px);
+      border-radius: 22px;
     }
 
     .nav-container {
-      padding: 6px 16px;
+      padding: 7px 10px;
+    }
+
+    .nav {
+      --nav-pill-height: 37px;
+      gap: 8px;
+      padding: 0;
+    }
+
+    .logo {
+      margin-left: 2px;
+      padding: 2px 11px 2px 12px;
+      background: var(--c-navy);
+      box-shadow: 0 10px 20px rgba(1, 13, 40, 0.16);
+    }
+
+    .logo-img {
+      height: calc(var(--nav-pill-height) - 4px);
+    }
+
+    .logo:hover .logo-visual,
+    .logo:focus-visible .logo-visual {
+      transform: translateY(2px) scale(1);
     }
 
     .links {
       display: none;
     }
 
+    .actions,
+    .nav-highlight {
+      display: none;
+    }
+
+    .mobile-menu-toggle {
+      display: inline-flex;
+    }
+
+    .mobile-menu {
+      display: grid;
+      gap: 12px;
+      padding: 8px 10px 14px;
+      border-top: 1px solid rgba(18, 41, 65, 0.08);
+      background: var(--c-warm-gray);
+      border-bottom-left-radius: 22px;
+      border-bottom-right-radius: 22px;
+    }
+
+    .mobile-menu__links {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .mobile-menu__link,
+    .mobile-menu__cta {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 46px;
+      padding: 12px 10px;
+      border-radius: 14px;
+      font-size: 0.95rem;
+      font-weight: 700;
+      line-height: 1.1;
+      text-align: center;
+      text-decoration: none;
+      border: 1px solid rgba(18, 41, 65, 0.12);
+    }
+
+    .mobile-menu__link {
+      background: #ffffff;
+      color: var(--c-navy-deep);
+    }
+
+    .mobile-menu__link.is-active {
+      background: var(--c-navy);
+      border-color: var(--c-navy);
+      color: #ffffff;
+    }
+
+    .mobile-menu__actions {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr);
+      gap: 8px;
+    }
+
+    .mobile-menu__cta {
+      background: var(--c-navy);
+      border-color: rgba(213, 181, 132, 0.72);
+      color: #ffffff;
+      box-shadow: 0 10px 20px rgba(1, 13, 40, 0.14);
+    }
+
     .dropdown-wrapper {
       display: none;
     }
-
-    .mobile-burger {
-      display: flex;
-    }
   }
 
-  /* Mobile hamburger button */
-  .mobile-burger {
-    display: none;
-    align-items: center; justify-content: center;
-    width: 40px; height: 40px; border: none; border-radius: 10px;
-    background: rgba(255, 255, 255, 0.08); color: var(--nav-surface-dark);
-    cursor: pointer; transition: all 0.2s; margin-left: auto;
-  }
-  .mobile-burger:hover { background: rgba(255, 255, 255, 0.15); }
-
-  /* Mobile overlay */
-  .mobile-overlay {
-    position: fixed; inset: 0; z-index: 9990;
-    background: rgba(0, 0, 0, 0.5); backdrop-filter: blur(4px);
-    animation: mobileOverlayIn 0.2s ease;
-  }
-  @keyframes mobileOverlayIn { from { opacity: 0; } to { opacity: 1; } }
-
-  /* Mobile drawer */
-  .mobile-drawer {
-    position: fixed; top: 0; right: 0; z-index: 9991;
-    width: min(300px, 80vw); height: 100vh;
-    background: linear-gradient(180deg, #0a1929 0%, #122941 100%);
-    padding: 80px 24px 40px;
-    display: flex; flex-direction: column; gap: 4px;
-    box-shadow: -8px 0 32px rgba(0, 0, 0, 0.3);
-    animation: mobileDrawerIn 0.25s ease;
-  }
-  @keyframes mobileDrawerIn { from { transform: translateX(100%); } to { transform: translateX(0); } }
-
-  .mobile-drawer__link {
-    display: block; padding: 14px 16px; border-radius: 10px;
-    color: rgba(255, 246, 226, 0.8); text-decoration: none;
-    font-size: 1rem; font-weight: 600;
-    transition: all 0.15s;
-  }
-  .mobile-drawer__link:hover, .mobile-drawer__link:active {
-    background: rgba(213, 181, 132, 0.1); color: #d5b584;
-  }
-  .mobile-drawer__link--wa { color: #25D366; }
-  .mobile-drawer__divider {
-    height: 1px; background: rgba(255, 255, 255, 0.08);
-    margin: 8px 16px;
-  }
-
-  @media (max-width: 720px) {
-    .auth-switch {
-      display: none;
+  @media (max-width: 420px) {
+    .mobile-menu__links {
+      grid-template-columns: minmax(0, 1fr);
     }
   }
 </style>
