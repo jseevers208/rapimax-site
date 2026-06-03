@@ -142,7 +142,7 @@
       const renderer = new BakedIconScene(canvas, iconAtlasUrl, {
         iconName: benefits[index].iconName,
         reduceMotion: reduceMotion || isMobile,
-        maxPixelRatio: isMobile ? 1 : 1.25,
+        maxPixelRatio: isMobile ? Math.min(window.devicePixelRatio || 2, 2) : 1.25,
         initialPointerX: isMobile ? -0.9 : 0,
         initialPointerY: isMobile ? 0.22 : 0,
         onReady: () => setWebglReadyAtIndex(index, true),
@@ -644,10 +644,10 @@
   }
 
   .benefits-section--mobile :global(.benefit-card) {
-    --benefit-mobile-icon-size: clamp(164px, 45vw, 190px);
+    --benefit-mobile-icon-size: clamp(130px, 36vw, 165px);
     --benefit-mobile-gap: clamp(8px, 2.8vw, 14px);
     width: 100%;
-    min-height: calc(var(--benefit-mobile-icon-size) + 56px);
+    min-height: calc(var(--benefit-mobile-icon-size) + 48px);
     padding: 0;
   }
 
@@ -714,15 +714,15 @@
     max-height: none;
     opacity: 1;
     transform: none;
-    font-size: clamp(0.95rem, 3.8vw, 1.12rem);
-    line-height: 1.42;
+    font-size: clamp(0.88rem, 2.5vw + 0.5rem, 1.05rem);
+    line-height: 1.45;
   }
 
   .benefits-section--mobile :global(.benefit-card__heading),
   .benefits-section--mobile :global(.benefit-card.is-active) :global(.benefit-card__heading) {
-    max-width: 8ch;
-    font-size: clamp(1.25rem, 6vw, 1.72rem);
-    line-height: 1.02;
+    max-width: 10ch;
+    font-size: clamp(1.1rem, 4.5vw, 1.45rem);
+    line-height: 1.1;
     transform: none;
   }
 

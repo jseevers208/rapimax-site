@@ -155,7 +155,7 @@
         autoRotateSpeed: AUTOROTATE_SPEED,
         autoRotateRange: AUTOROTATE_RANGE,
         autoRotatePitchRange: AUTOROTATE_PITCH_RANGE,
-        maxPixelRatio: 1.25,
+        maxPixelRatio: Math.min(window.devicePixelRatio || 2, 2),
         onReady: () => setWebglReadyAtIndex(index, true),
         onError: () => setWebglReadyAtIndex(index, false)
       });
@@ -856,6 +856,10 @@
     .how-it-works__card {
       width: 100%;
       padding: 28px 20px 24px;
+    }
+
+    .how-it-works__step-lead {
+      padding-right: 2.75rem;
     }
 
     .how-it-works__tooltip {
