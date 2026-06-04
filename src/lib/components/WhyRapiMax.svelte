@@ -142,7 +142,7 @@
       const renderer = new BakedIconScene(canvas, iconAtlasUrl, {
         iconName: benefits[index].iconName,
         reduceMotion: reduceMotion || isMobile,
-        maxPixelRatio: isMobile ? Math.min(window.devicePixelRatio || 2, 2) : 1.25,
+        maxPixelRatio: isMobile ? Math.min(window.devicePixelRatio || 2, 2) : 2,
         initialPointerX: isMobile ? -0.9 : 0,
         initialPointerY: isMobile ? 0.22 : 0,
         onReady: () => setWebglReadyAtIndex(index, true),
