@@ -65,7 +65,7 @@ export async function onRequestPost(context) {
           },
           body: JSON.stringify({
             from: env.EMAIL_FROM || 'RapiMax <notificaciones@rapimax.co.cr>',
-            to: [env.NOTIFICATION_EMAIL],
+            to: env.NOTIFICATION_EMAIL.split(",").map(e => e.trim()),
             subject: `Nueva solicitud de crédito — ${data.applicantFullName}`,
             html: `
               <h2>Nueva solicitud de financiamiento</h2>

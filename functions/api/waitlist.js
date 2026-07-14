@@ -47,7 +47,7 @@ export async function onRequestPost(context) {
           },
           body: JSON.stringify({
             from: env.EMAIL_FROM || 'RapiMax <notificaciones@rapimax.co.cr>',
-            to: [env.NOTIFICATION_EMAIL],
+            to: env.NOTIFICATION_EMAIL.split(",").map(e => e.trim()),
             subject: `Nueva suscripción — Lista de espera`,
             html: `<h2>Nuevo suscriptor en lista de espera</h2><p><strong>Email:</strong> ${email}</p>`,
           }),
