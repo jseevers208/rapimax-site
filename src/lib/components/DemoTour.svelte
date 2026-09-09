@@ -21,6 +21,7 @@
   let cardEl;
   let rafId = 0;
   let missingTarget = false;
+  let settled = false;      // card is revealed once the scroll and layout have settled
   let timers = [];
 
   const PAD = 10;
@@ -67,36 +68,41 @@
     return zPrev > z ? Math.max(docTop, prevBottom) : docTop;
   };
 
-  const scrollTo = (y) =>
+  const scrollTo = (y, duration = 0.9) =>
     new Promise((resolve) => {
       const target = Math.max(0, Math.round(y));
       const lenis = getLenis();
       let done = false;
       const finish = () => { if (!done) { done = true; resolve(); } };
       if (lenis) {
-        lenis.scrollTo(target, { duration: 0.9, force: true, lock: true, onComplete: finish });
-        setTimeout(finish, 1300);
+        lenis.scrollTo(target, { duration, force: true, lock: true, onComplete: finish });
+        setTimeout(finish, duration * 1000 + 400);
       } else {
         window.scrollTo({ top: target, behavior: 'smooth' });
-        setTimeout(finish, 750);
+        setTimeout(finish, Math.max(400, duration * 800));
       }
     });
 
+  const targetY = (el) => {
+    if (el.id === 'inicio') return 0;
+    if (el.classList.contains('scroll-layer')) return layerScrollTarget(el);
+    const r = el.getBoundingClientRect();
+    const offset = bannerHeight() + 88; // banner + floating nav
+    const tall = r.height > window.innerHeight - offset - 40;
+    return r.top + window.scrollY - (tall ? offset : Math.max(offset, (window.innerHeight - r.height) / 2));
+  };
+
+  // Sections above the target mount lazily while scrolling and grow, which moves the target.
+  // Scroll, let the layout settle, recompute, and repeat until the position converges.
   const scrollToStep = async () => {
     const el = findTarget();
     if (!el || isFixed(el)) return;
-    let y;
-    if (el.id === 'inicio') {
-      y = 0;
-    } else if (el.classList.contains('scroll-layer')) {
-      y = layerScrollTarget(el);
-    } else {
-      const r = el.getBoundingClientRect();
-      const offset = bannerHeight() + 88; // banner + floating nav
-      const tall = r.height > window.innerHeight - offset - 40;
-      y = r.top + window.scrollY - (tall ? offset : Math.max(offset, (window.innerHeight - r.height) / 2));
+    for (let pass = 0; pass < 4; pass += 1) {
+      const y = Math.max(0, Math.round(targetY(el)));
+      if (Math.abs(y - window.scrollY) < 6) break;
+      await scrollTo(y, pass === 0 ? 0.9 : 0.45);
+      await wait(260);
     }
-    await scrollTo(y);
   };
 
   const measure = () => {
@@ -161,13 +167,15 @@
     clearTimers();
     index = i;
     active = true;
+    settled = false;
     persist(i);
     getLenis()?.stop();
     // Lazy sections mount on scroll: give the target a moment to exist.
     for (let attempt = 0; attempt < 15 && !findTarget(); attempt += 1) await wait(120);
     await scrollToStep();
     measure();
-    later(measure, 500);
+    later(measure, 200);
+    later(() => { measure(); settled = true; }, 450);
     later(measure, 1200);
   };
 
@@ -256,7 +264,7 @@
       <div class="tour__dim" aria-hidden="true"></div>
     {/if}
 
-    <div class="tour__card" style={cardStyle} bind:this={cardEl} role="dialog" aria-labelledby="tour-title">
+    <div class="tour__card" class:tour__card--settled={settled} style={cardStyle} bind:this={cardEl} role="dialog" aria-labelledby="tour-title">
       <div class="tour__meta">
         <span class="tour__badge">Recorrido</span>
         <span class="tour__count">{index + 1} / {total}</span>
@@ -315,9 +323,11 @@
     padding: 18px 20px 16px;
     box-shadow: 0 24px 60px rgba(1, 13, 40, 0.35);
     border: 1px solid rgba(213, 181, 132, 0.5);
-    transition: top 260ms ease, left 260ms ease;
+    transition: top 260ms ease, left 260ms ease, opacity 220ms ease;
     font-family: inherit;
+    opacity: 0;
   }
+  .tour__card--settled { opacity: 1; }
 
   .tour__meta { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
   .tour__badge {

@@ -60,6 +60,7 @@ crons = [
 
 [env.demo.vars]
 DEMO_MODE = "true"
+ANTHROPIC_MODEL = "claude-sonnet-4-6"
 # SITE_URL fallback for cron digests only; HTTP requests derive it from the request origin.
 SITE_URL = "https://rapimax-demo.workers.dev"
 NOTIFICATION_EMAIL = "jorge@logeek.io"

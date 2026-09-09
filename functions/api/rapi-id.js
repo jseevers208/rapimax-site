@@ -125,7 +125,8 @@ Return ONLY the JSON object. Use empty string for anything not visible. Do NOT g
         'anthropic-version': '2023-06-01',
       },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
+        // claude-sonnet-4-20250514 was retired by Anthropic on 2026-06-15; keep the model configurable.
+        model: env.ANTHROPIC_MODEL || 'claude-sonnet-4-6',
         max_tokens: 1024,
         messages: [{ role: 'user', content }],
       }),
