@@ -17,7 +17,12 @@
 
 <style>
   .demo-banner {
-    position: relative;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: var(--demo-banner-h, 37px);
+    box-sizing: border-box;
     z-index: 10001;
     background: var(--c-navy-deep, #010d28);
     color: rgba(255, 246, 226, 0.92);
@@ -29,11 +34,13 @@
   .demo-banner__inner {
     max-width: 1340px;
     margin: 0 auto;
-    padding: 8px clamp(14px, 3vw, 28px);
+    height: 100%;
+    padding: 0 clamp(14px, 3vw, 28px);
     display: flex;
     align-items: center;
     gap: 10px;
-    flex-wrap: wrap;
+    white-space: nowrap;
+    overflow: hidden;
   }
 
   .demo-banner__dot {
@@ -66,7 +73,7 @@
     font: inherit;
     font-weight: 700;
     font-size: 0.78rem;
-    padding: 6px 14px;
+    padding: 4px 14px;
     border-radius: 999px;
     cursor: pointer;
     transition: background 160ms ease, border-color 160ms ease, transform 160ms ease;

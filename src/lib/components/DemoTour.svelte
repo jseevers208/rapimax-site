@@ -1,22 +1,39 @@
 <script>
-  // Lightweight guided tour for the demo environment. No external deps.
-  // Highlights an element with a spotlight overlay and a positioned card,
-  // navigates across pages and resumes from sessionStorage.
+  // Guided tour for the demo environment. No external dependencies.
+  //
+  // Design notes:
+  // - The home page is built with stacked ".scroll-layer" wrappers whose ".sticky-panel"
+  //   children pin at the top of the viewport. A layer with a HIGHER z-index than the
+  //   previous one covers it (scroll to the layer top). A layer with a LOWER z-index is
+  //   revealed when the previous one scrolls away (scroll to the previous layer bottom).
+  // - Scrolling goes through Lenis when it is active, otherwise native scrolling.
+  // - The spotlight is clamped to the viewport; full-viewport targets get an outline only.
+  // - Cross-page steps navigate and resume from sessionStorage.
   import { onMount, onDestroy, tick } from 'svelte';
   import { tourSteps, TOUR_STORAGE_KEY } from '../utils/demoTourSteps.js';
+  import { getLenis } from '../utils/smoothScroll.js';
 
   let active = false;
   let index = 0;
-  let rect = null;          // highlighted element rect (viewport coords)
+  let rect = null;          // spotlight rect (viewport coords), already clamped
+  let fullView = false;     // target fills the viewport: outline only, no dimming
   let cardStyle = '';
   let cardEl;
   let rafId = 0;
   let missingTarget = false;
+  let timers = [];
 
   const PAD = 10;
   const CARD_W = 360;
+  const EDGE = 8;
 
   const currentPath = () => window.location.pathname.replace(/\/+$/, '') || '/';
+  const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+  const bannerHeight = () => {
+    const v = getComputedStyle(document.documentElement).getPropertyValue('--demo-banner-h');
+    const n = parseFloat(v);
+    return Number.isFinite(n) ? n : 0;
+  };
 
   $: step = tourSteps[index];
   $: total = tourSteps.length;
@@ -26,17 +43,78 @@
   };
   const clearPersist = () => { try { sessionStorage.removeItem(TOUR_STORAGE_KEY); } catch {} };
 
-  const findTarget = () => {
-    if (!step?.selector) return null;
-    return document.querySelector(step.selector);
+  const findTarget = () => (step?.selector ? document.querySelector(step.selector) : null);
+
+  // The element to frame: the pinned panel inside a layer, otherwise the element itself.
+  const visibleTarget = () => {
+    const el = findTarget();
+    if (!el) return null;
+    return el.querySelector(':scope > .sticky-panel') || el;
+  };
+
+  const isFixed = (el) => getComputedStyle(el).position === 'fixed';
+
+  const layerScrollTarget = (el) => {
+    const docTop = el.getBoundingClientRect().top + window.scrollY;
+    const prev = el.previousElementSibling;
+    if (!el.classList.contains('scroll-layer') || !prev || !prev.classList.contains('scroll-layer')) {
+      return docTop;
+    }
+    const z = parseInt(getComputedStyle(el).zIndex, 10) || 0;
+    const zPrev = parseInt(getComputedStyle(prev).zIndex, 10) || 0;
+    const prevBottom = prev.getBoundingClientRect().bottom + window.scrollY;
+    // Lower z-index than the previous layer: it is revealed once the previous layer scrolls out.
+    return zPrev > z ? Math.max(docTop, prevBottom) : docTop;
+  };
+
+  const scrollTo = (y) =>
+    new Promise((resolve) => {
+      const target = Math.max(0, Math.round(y));
+      const lenis = getLenis();
+      let done = false;
+      const finish = () => { if (!done) { done = true; resolve(); } };
+      if (lenis) {
+        lenis.scrollTo(target, { duration: 0.9, force: true, lock: true, onComplete: finish });
+        setTimeout(finish, 1300);
+      } else {
+        window.scrollTo({ top: target, behavior: 'smooth' });
+        setTimeout(finish, 750);
+      }
+    });
+
+  const scrollToStep = async () => {
+    const el = findTarget();
+    if (!el || isFixed(el)) return;
+    let y;
+    if (el.id === 'inicio') {
+      y = 0;
+    } else if (el.classList.contains('scroll-layer')) {
+      y = layerScrollTarget(el);
+    } else {
+      const r = el.getBoundingClientRect();
+      const offset = bannerHeight() + 88; // banner + floating nav
+      const tall = r.height > window.innerHeight - offset - 40;
+      y = r.top + window.scrollY - (tall ? offset : Math.max(offset, (window.innerHeight - r.height) / 2));
+    }
+    await scrollTo(y);
   };
 
   const measure = () => {
-    const el = findTarget();
-    if (!el) { rect = null; missingTarget = true; positionCard(); return; }
+    const el = visibleTarget();
+    if (!el) { rect = null; fullView = false; missingTarget = true; positionCard(); return; }
     missingTarget = false;
     const r = el.getBoundingClientRect();
-    rect = { top: r.top - PAD, left: r.left - PAD, width: r.width + PAD * 2, height: r.height + PAD * 2 };
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+    const top = Math.max(EDGE, r.top - PAD);
+    const left = Math.max(EDGE, r.left - PAD);
+    const bottom = Math.min(vh - EDGE, r.bottom + PAD);
+    const right = Math.min(vw - EDGE, r.right + PAD);
+    if (bottom - top < 40 || right - left < 40) {
+      rect = null; fullView = false; positionCard(); return;
+    }
+    rect = { top, left, width: right - left, height: bottom - top };
+    fullView = (rect.width * rect.height) / (vw * vh) > 0.72;
     positionCard();
   };
 
@@ -46,47 +124,51 @@
     const vh = window.innerHeight;
     const ch = cardEl?.offsetHeight || 220;
     const cw = Math.min(CARD_W, vw - 24);
-    const placement = (!rect || step.placement === 'center' || vw < 720) ? 'center' : step.placement;
-    let top = 0, left = 0;
+    let placement = step.placement || 'center';
+    if (!rect || fullView || vw < 720 || placement === 'center') placement = 'center';
+    let top = 0;
+    let left = 0;
+    const clampX = (x) => Math.min(Math.max(12, x), vw - cw - 12);
+    const clampY = (y) => Math.min(Math.max(bannerHeight() + 12, y), vh - ch - 12);
 
     if (placement === 'center') {
-      top = Math.max(16, vh - ch - 24);
-      left = Math.max(12, (vw - cw) / 2);
+      top = vh - ch - 24;
+      left = (vw - cw) / 2;
     } else if (placement === 'top') {
-      top = Math.max(16, rect.top - ch - 14);
-      left = Math.min(Math.max(12, rect.left + rect.width / 2 - cw / 2), vw - cw - 12);
-      if (rect.top - ch - 14 < 16) top = Math.min(vh - ch - 16, rect.top + rect.height + 14);
+      top = rect.top - ch - 14;
+      left = rect.left + rect.width / 2 - cw / 2;
+      if (top < bannerHeight() + 12) top = rect.top + rect.height + 14;
     } else if (placement === 'bottom') {
-      top = Math.min(vh - ch - 16, rect.top + rect.height + 14);
-      left = Math.min(Math.max(12, rect.left + rect.width / 2 - cw / 2), vw - cw - 12);
+      top = rect.top + rect.height + 14;
+      left = rect.left + rect.width / 2 - cw / 2;
+      if (top + ch > vh - 12) top = rect.top - ch - 14;
     } else if (placement === 'left') {
-      left = Math.max(12, rect.left - cw - 14);
-      top = Math.min(Math.max(16, rect.top + rect.height / 2 - ch / 2), vh - ch - 16);
+      left = rect.left - cw - 14;
+      top = rect.top + rect.height / 2 - ch / 2;
+      if (left < 12) left = rect.left + rect.width + 14;
     } else if (placement === 'right') {
-      left = Math.min(rect.left + rect.width + 14, vw - cw - 12);
-      top = Math.min(Math.max(16, rect.top + rect.height / 2 - ch / 2), vh - ch - 16);
+      left = rect.left + rect.width + 14;
+      top = rect.top + rect.height / 2 - ch / 2;
+      if (left + cw > vw - 12) left = rect.left - cw - 14;
     }
-    cardStyle = `top:${Math.round(top)}px;left:${Math.round(left)}px;width:${cw}px;`;
+    cardStyle = `top:${Math.round(clampY(top))}px;left:${Math.round(clampX(left))}px;width:${cw}px;`;
   };
 
-  const scrollToTarget = async () => {
-    const el = findTarget();
-    if (!el) return;
-    el.scrollIntoView({ behavior: 'smooth', block: step.placement === 'center' ? 'start' : 'center' });
-    await new Promise((r) => setTimeout(r, 520));
-  };
+  const clearTimers = () => { timers.forEach(clearTimeout); timers = []; };
+  const later = (fn, ms) => { timers.push(setTimeout(fn, ms)); };
 
   const showStep = async (i) => {
+    clearTimers();
     index = i;
     active = true;
     persist(i);
-    // Give lazy sections time to mount, then retry a few frames.
-    for (let attempt = 0; attempt < 12; attempt += 1) {
-      if (findTarget()) break;
-      await new Promise((r) => setTimeout(r, 120));
-    }
-    await scrollToTarget();
+    getLenis()?.stop();
+    // Lazy sections mount on scroll: give the target a moment to exist.
+    for (let attempt = 0; attempt < 15 && !findTarget(); attempt += 1) await wait(120);
+    await scrollToStep();
     measure();
+    later(measure, 500);
+    later(measure, 1200);
   };
 
   const goTo = async (i) => {
@@ -105,9 +187,12 @@
   const prev = () => goTo(index - 1);
 
   const finish = () => {
+    clearTimers();
     active = false;
     rect = null;
+    fullView = false;
     clearPersist();
+    getLenis()?.start();
   };
 
   export const start = () => {
@@ -132,15 +217,16 @@
     window.addEventListener('keydown', onKey);
     window.addEventListener('resize', onViewportChange);
     window.addEventListener('scroll', onViewportChange, { passive: true });
-    // Resume if a tour was in progress and we just navigated here.
+    // Resume a tour in progress after a cross-page navigation.
     try {
       const raw = sessionStorage.getItem(TOUR_STORAGE_KEY);
       if (raw) {
         const saved = JSON.parse(raw);
         const i = Number(saved.index);
-        if (Number.isInteger(i) && tourSteps[i] && tourSteps[i].page === currentPath() && Date.now() - (saved.ts || 0) < 10 * 60 * 1000) {
-          setTimeout(() => showStep(i), 400);
-        } else if (Number.isInteger(i) && tourSteps[i] && tourSteps[i].page !== currentPath()) {
+        const fresh = Date.now() - (saved.ts || 0) < 10 * 60 * 1000;
+        if (Number.isInteger(i) && tourSteps[i] && fresh && tourSteps[i].page === currentPath()) {
+          later(() => showStep(i), 500);
+        } else {
           clearPersist();
         }
       }
@@ -148,10 +234,12 @@
   });
 
   onDestroy(() => {
+    clearTimers();
     window.removeEventListener('keydown', onKey);
     window.removeEventListener('resize', onViewportChange);
     window.removeEventListener('scroll', onViewportChange);
     cancelAnimationFrame(rafId);
+    if (active) getLenis()?.start();
   });
 </script>
 
@@ -160,6 +248,7 @@
     {#if rect}
       <div
         class="tour__spot"
+        class:tour__spot--outline={fullView}
         style={`top:${rect.top}px;left:${rect.left}px;width:${rect.width}px;height:${rect.height}px;`}
         aria-hidden="true"
       ></div>
@@ -210,6 +299,11 @@
     box-shadow: 0 0 0 9999px rgba(1, 13, 40, 0.62), 0 0 0 2px rgba(213, 181, 132, 0.9), 0 18px 48px rgba(1, 13, 40, 0.45);
     transition: top 260ms ease, left 260ms ease, width 260ms ease, height 260ms ease;
     pointer-events: auto;
+  }
+
+  /* Full-viewport sections: keep them fully visible, frame them only. */
+  .tour__spot--outline {
+    box-shadow: inset 0 0 0 3px rgba(213, 181, 132, 0.9), inset 0 0 0 9999px rgba(1, 13, 40, 0.10);
   }
 
   .tour__card {

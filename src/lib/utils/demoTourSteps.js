@@ -14,16 +14,16 @@ export const tourSteps = [
   },
   {
     page: '/',
-    selector: '.scroll-layer--why',
-    title: 'Beneficios con iconografía 3D',
-    body: 'Cada beneficio se renderiza con un modelo 3D interactivo (WebGL) que reacciona al cursor. En dispositivos sin WebGL cae automáticamente a un ícono vectorial.',
+    selector: '.scroll-layer--how-it-works',
+    title: 'Cómo funciona',
+    body: 'El proceso completo en pasos claros para el cliente: solicitud, análisis, aprobación y desembolso.',
     placement: 'top'
   },
   {
     page: '/',
-    selector: '.scroll-layer--how-it-works',
-    title: 'Cómo funciona',
-    body: 'El proceso completo en pasos claros para el cliente: solicitud, análisis, aprobación y desembolso.',
+    selector: '.scroll-layer--why',
+    title: 'Beneficios con iconografía 3D',
+    body: 'Cada beneficio se renderiza con un modelo 3D interactivo (WebGL) que reacciona al cursor. En dispositivos sin WebGL cae automáticamente a un ícono vectorial.',
     placement: 'top'
   },
   {

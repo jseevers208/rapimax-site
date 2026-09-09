@@ -2,6 +2,9 @@ import Lenis from 'lenis';
 
 let lenis = null;
 
+// Read-only access to the active Lenis instance (used by the demo tour).
+export const getLenis = () => lenis;
+
 const REDUCE_MOTION_QUERY = '(prefers-reduced-motion: reduce)';
 const FINE_POINTER_QUERY = '(hover: hover) and (pointer: fine)';
 
