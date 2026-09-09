@@ -2,6 +2,7 @@
   import { onMount, tick } from 'svelte';
   import SiteLayout from './lib/components/SiteLayout.svelte';
   import Hero from './lib/components/Hero.svelte';
+  import { features } from './lib/utils/features.js';
 
   let WhosRapimax;
   let FinancingOptions;
@@ -181,8 +182,8 @@
     </div>
   </div>
 
-  <!-- HIDDEN: Partners section — re-enable later -->
-  {#if false}
+  <!-- Partners section: visible when features.partners (demo) -->
+  {#if features.partners}
   <div class="scroll-layer scroll-layer--partners">
     <div class="sticky-panel sticky-panel--partners">
       {#if Partners}
@@ -194,8 +195,8 @@
   </div>
   {/if}
 
-  <!-- HIDDEN: Partner Map section — re-enable later -->
-  {#if false}
+  <!-- Partner Map section: visible when features.partnerMap (demo) -->
+  {#if features.partnerMap}
   <div class="scroll-layer scroll-layer--partner-map">
     <div class="sticky-panel sticky-panel--partner-map">
       {#if PartnerMap}

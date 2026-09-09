@@ -1,10 +1,14 @@
 import 'lenis/dist/lenis.css';
 import './app.css';
+import { features } from './lib/utils/features.js';
+
+// Outside demo mode these routes redirect to /contactanos (current production behavior).
+const redirectToContact = () => { window.location.href = '/contactanos'; return import('./ContactApp.svelte'); };
 
 const routes = {
   '/': () => import('./App.svelte'),
-  '/calculadora': () => { window.location.href = '/contactanos'; return import('./ContactApp.svelte'); },
-  '/solicitud': () => { window.location.href = '/contactanos'; return import('./ContactApp.svelte'); },
+  '/calculadora': features.calculatorPage ? () => import('./CalculatorApp.svelte') : redirectToContact,
+  '/solicitud': features.solicitudPage ? () => import('./FinancingApp.svelte') : redirectToContact,
   '/contactanos': () => import('./ContactApp.svelte'),
   '/requisitos': () => import('./RequirementsApp.svelte'),
   '/servicios': () => import('./ServicesApp.svelte'),

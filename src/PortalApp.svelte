@@ -1,4 +1,5 @@
 <script>
+  import DemoShell from './lib/components/DemoShell.svelte';
   // i18n translations
   const translations = {
     es: {
@@ -152,6 +153,8 @@
   if (token) loadStatus();
   else { error = 'no-token'; loading = false; }
 </script>
+
+<DemoShell />
 
 <div class="portal">
   <header class="portal__header">
@@ -318,6 +321,7 @@
     {/if}
   </main>
 </div>
+
 
 <style>
   :global(body) { margin:0; font-family:'Montserrat',-apple-system,system-ui,sans-serif; background:#0a1929; color:#e8e4dc; -webkit-font-smoothing:antialiased; }

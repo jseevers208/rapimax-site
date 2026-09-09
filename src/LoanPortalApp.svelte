@@ -1,4 +1,5 @@
 <script>
+  import DemoShell from './lib/components/DemoShell.svelte';
   import { onMount } from 'svelte';
 
   let lookupValue = '';
@@ -79,6 +80,8 @@
   $: nextPay = loanData?.summary?.nextPayment;
   $: daysLeft = nextPay ? daysUntil(nextPay.dueDate) : null;
 </script>
+
+<DemoShell />
 
 <div class="loan-portal">
   <header class="lp-header">
@@ -330,6 +333,7 @@
     </div>
   {/if}
 </div>
+
 
 <style>
   :global(body) { margin:0; font-family:'Montserrat',-apple-system,system-ui,sans-serif; background:#0a1929; color:#e8e4dc; -webkit-font-smoothing:antialiased; }

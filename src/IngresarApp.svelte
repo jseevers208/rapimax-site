@@ -1,4 +1,5 @@
 <script>
+  import DemoShell from './lib/components/DemoShell.svelte';
   const translations = {
     es: {
       title: 'Consultá tu solicitud',
@@ -69,6 +70,8 @@
   }
 </script>
 
+<DemoShell />
+
 <div class="ingresar">
   <header class="ingresar__header">
     <a href="/" class="ingresar__brand">
@@ -116,6 +119,7 @@
     </div>
   </main>
 </div>
+
 
 <style>
   :global(body) { margin:0; font-family:'Montserrat',-apple-system,system-ui,sans-serif; background:#0a1929; color:#e8e4dc; -webkit-font-smoothing:antialiased; }

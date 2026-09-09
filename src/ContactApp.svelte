@@ -1,5 +1,6 @@
 <script>
   import SiteLayout from './lib/components/SiteLayout.svelte';
+  import { features } from './lib/utils/features.js';
   import phoneIcon from './assets/contact/phone.svg';
   import whatsappIcon from './assets/contact/whatsapp-bw.svg';
   import whatsappColorIcon from './assets/contact/whatsapp-color.svg';
@@ -308,8 +309,8 @@
         </section>
       {/if}
 
-      <!-- HIDDEN: FAQ section — re-enable later -->
-      {#if false}
+      <!-- FAQ section: visible when features.contactFaq (demo) -->
+      {#if features.contactFaq}
       {#if visibleFaqItems.length > 0 || searchActive}
         <section class="faq-heading" aria-labelledby="faq-title">
           <h2 id="faq-title">Preguntas frecuentes</h2>

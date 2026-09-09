@@ -30,7 +30,15 @@ export default {
       return handleOptions();
     }
 
-    const context = { request, env, ctx };
+    // Demo environment only (DEMO_MODE var is absent in production).
+    // SITE_URL follows the request origin so links work on workers.dev and on any custom domain.
+    const isDemo = env.DEMO_MODE === 'true';
+    const context = { request, env: isDemo ? { ...env, SITE_URL: url.origin } : env, ctx };
+
+    // Never let search engines index the demo.
+    if (isDemo && path === '/robots.txt') {
+      return new Response('User-agent: *\nDisallow: /\n', { headers: { 'Content-Type': 'text/plain; charset=utf-8' } });
+    }
 
     try {
       // Route API requests
@@ -92,7 +100,12 @@ export default {
       }
 
       // Everything else is handled by [assets] (static files)
-      // Return undefined/null to let assets handle it
+      if (isDemo) {
+        const assetResponse = await env.ASSETS.fetch(request);
+        const headers = new Headers(assetResponse.headers);
+        headers.set('X-Robots-Tag', 'noindex, nofollow, noarchive');
+        return new Response(assetResponse.body, { status: assetResponse.status, statusText: assetResponse.statusText, headers });
+      }
       return env.ASSETS.fetch(request);
     } catch (err) {
       console.error('Worker error:', err);

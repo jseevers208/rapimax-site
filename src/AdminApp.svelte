@@ -1,4 +1,5 @@
 <script>
+  import DemoShell from './lib/components/DemoShell.svelte';
   // ============================================
   // i18n
   // ============================================
@@ -896,6 +897,8 @@
   // ============================================
   $: if (isLoggedIn && !stats && activeTab === 'dashboard') loadDashboard();
 </script>
+
+<DemoShell />
 
 <div class="admin" class:admin--detail={detailView}>
 
@@ -2033,6 +2036,7 @@
   </main>
   {/if}
 </div>
+
 
 <style>
   :global(*) { box-sizing: border-box; }

@@ -1,4 +1,5 @@
 ﻿<script>
+  import { features } from '../utils/features.js';
   import { fade, slide } from 'svelte/transition';
   import { cubicOut } from 'svelte/easing';
   import { onMount, tick, createEventDispatcher } from 'svelte';
@@ -38,9 +39,14 @@
           { label: 'Vehículos de alta gama', href: '/servicios#vehiculos-alta-gama' },
           { label: 'Motocicletas', href: '/servicios#motocicletas' }
         ],
-        extras: [
-          { label: 'Solicitar financiamiento', href: '/contactanos' }
-        ]
+        extras: features.navProductLinks
+          ? [
+              { label: 'Calculadora de financiamiento', href: '/calculadora' },
+              { label: 'Solicitar financiamiento', href: '/solicitud' }
+            ]
+          : [
+              { label: 'Solicitar financiamiento', href: '/contactanos' }
+            ]
       }
     },
     {
@@ -101,9 +107,15 @@
     { id: 'requirements', label: 'Requisitos', href: '/requisitos', pageId: 'requirements' },
     { id: 'contact', label: 'Contactanos', href: '/contactanos', pageId: 'contact' }
   ];
-  const mobileCtaLinks = [
-    { label: 'Contactanos', href: '/contactanos' }
-  ];
+  const mobileCtaLinks = features.navProductLinks
+    ? [
+        { label: 'Calculadora', href: '/calculadora' },
+        { label: 'Solicitar', href: '/solicitud' },
+        { label: 'Contactanos', href: '/contactanos' }
+      ]
+    : [
+        { label: 'Contactanos', href: '/contactanos' }
+      ];
 
   let logoHighlighted = true;
   let mobileMenuOpen = false;
@@ -546,8 +558,8 @@
           </div>
         </nav>
 
-        <!-- HIDDEN: Ingresar/Lista de espera — re-enable later -->
-        <div class="actions" style="display:none">
+        <!-- Ingresar/Lista de espera: visible when features.authButtons (demo) -->
+        <div class="actions" style={features.authButtons ? "" : "display:none"}>
           <div
             class="auth-switch"
             bind:this={authContainerRef}

@@ -4,6 +4,7 @@
   import Footer from './Footer.svelte';
   import NotificationModal from './NotificationModal.svelte';
   import MaxAgent from './MaxAgent.svelte';
+  import DemoShell from './DemoShell.svelte';
   import { initSmoothScroll } from '../utils/smoothScroll.js';
 
   export let page = 'home';
@@ -27,6 +28,8 @@
     };
   });
 </script>
+
+<DemoShell />
 
 <Nav {page} on:waitlist={handleWaitlistOpen} />
 
