@@ -17,6 +17,10 @@
 
   onMount(async () => {
     if (!features.demoBanner && !features.demoTour) return;
+    // The home page uses stacked sticky layers tuned to exact viewport heights: leave its layout untouched.
+    if (features.demoBanner && !document.querySelector('.scroll-layer')) {
+      document.documentElement.classList.add('rapimax-demo-pad');
+    }
     const [b, t] = await Promise.all([
       features.demoBanner ? import('./DemoBanner.svelte') : Promise.resolve(null),
       features.demoTour ? import('./DemoTour.svelte') : Promise.resolve(null)
@@ -35,15 +39,9 @@
 {/if}
 
 <style>
-  /* Demo layout offsets: the fixed banner takes the top strip; nav and sticky panels move below it. */
+  /* The fixed banner floats over the page like the nav does; the nav moves below it. */
   :global(html.rapimax-demo) { --demo-banner-h: 37px; }
-  :global(html.rapimax-demo body) { padding-top: var(--demo-banner-h); }
   :global(html.rapimax-demo .nav-wrapper) { top: var(--demo-banner-h); }
-  :global(html.rapimax-demo .sticky-panel) {
-    top: var(--demo-banner-h);
-    height: calc(100vh - var(--demo-banner-h));
-  }
-  @media (max-width: 640px), (prefers-reduced-motion: reduce) {
-    :global(html.rapimax-demo .sticky-panel) { top: 0; height: auto; }
-  }
+  /* Pages without the layered home scroll get a top offset so nothing hides under the banner. */
+  :global(html.rapimax-demo.rapimax-demo-pad body) { padding-top: var(--demo-banner-h); }
 </style>

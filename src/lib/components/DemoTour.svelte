@@ -6,7 +6,8 @@
   //   children pin at the top of the viewport. A layer with a HIGHER z-index than the
   //   previous one covers it (scroll to the layer top). A layer with a LOWER z-index is
   //   revealed when the previous one scrolls away (scroll to the previous layer bottom).
-  // - Scrolling goes through Lenis when it is active, otherwise native scrolling.
+  // - Scrolling goes through Lenis when it is active, otherwise native scrolling. The user can
+  //   keep scrolling during the tour; the spotlight re-measures and follows the target.
   // - The spotlight is clamped to the viewport; full-viewport targets get an outline only.
   // - Cross-page steps navigate and resume from sessionStorage.
   import { onMount, onDestroy, tick } from 'svelte';
@@ -75,7 +76,7 @@
       let done = false;
       const finish = () => { if (!done) { done = true; resolve(); } };
       if (lenis) {
-        lenis.scrollTo(target, { duration, force: true, lock: true, onComplete: finish });
+        lenis.scrollTo(target, { duration, onComplete: finish });
         setTimeout(finish, duration * 1000 + 400);
       } else {
         window.scrollTo({ top: target, behavior: 'smooth' });
@@ -101,6 +102,7 @@
       const y = Math.max(0, Math.round(targetY(el)));
       if (Math.abs(y - window.scrollY) < 6) break;
       await scrollTo(y, pass === 0 ? 0.9 : 0.45);
+      if (pass === 0) { measure(); settled = true; }
       await wait(260);
     }
   };
@@ -169,14 +171,13 @@
     active = true;
     settled = false;
     persist(i);
-    getLenis()?.stop();
     // Lazy sections mount on scroll: give the target a moment to exist.
     for (let attempt = 0; attempt < 15 && !findTarget(); attempt += 1) await wait(120);
     await scrollToStep();
     measure();
-    later(measure, 200);
-    later(() => { measure(); settled = true; }, 450);
-    later(measure, 1200);
+    settled = true;
+    later(measure, 300);
+    later(measure, 1000);
   };
 
   const goTo = async (i) => {
@@ -200,7 +201,6 @@
     rect = null;
     fullView = false;
     clearPersist();
-    getLenis()?.start();
   };
 
   export const start = () => {
@@ -247,7 +247,6 @@
     window.removeEventListener('resize', onViewportChange);
     window.removeEventListener('scroll', onViewportChange);
     cancelAnimationFrame(rafId);
-    if (active) getLenis()?.start();
   });
 </script>
 
