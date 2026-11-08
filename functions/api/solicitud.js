@@ -77,8 +77,8 @@ export async function onRequestPost(context) {
               <p><strong>Email:</strong> ${data.personalEmail || 'N/A'}</p>
               <p><strong>Ingreso bruto mensual:</strong> $${data.grossMonthlyIncome || 'N/A'}</p>
               <hr>
-              <p><a href="${env.SITE_URL || 'https://rapimax-dev.com'}/admin">Ver en panel de administración</a></p>
-              <p><a href="${env.SITE_URL || 'https://rapimax-dev.com'}/mi-solicitud?token=${accessToken}">Ver portal del cliente</a></p>
+              <p><a href="${env.SITE_URL || 'https://rapimaxcr.com'}/admin">Ver en panel de administración</a></p>
+              <p><a href="${env.SITE_URL || 'https://rapimaxcr.com'}/mi-solicitud?token=${accessToken}">Ver portal del cliente</a></p>
             `,
           }),
         });
@@ -90,7 +90,7 @@ export async function onRequestPost(context) {
     // Send confirmation email to customer
     if (env.RESEND_API_KEY && data.personalEmail) {
       try {
-        const siteUrl = env.SITE_URL || 'https://rapimax-dev.com';
+        const siteUrl = env.SITE_URL || 'https://rapimaxcr.com';
         const portalLink = `${siteUrl}/mi-solicitud?token=${accessToken}`;
         await fetch('https://api.resend.com/emails', {
           method: 'POST',
@@ -145,7 +145,7 @@ export async function onRequestPost(context) {
     // Send confirmation email to customer
     if (env.RESEND_API_KEY && data.personalEmail) {
       try {
-        const siteUrl = env.SITE_URL || 'https://rapimax-dev.com';
+        const siteUrl = env.SITE_URL || 'https://rapimaxcr.com';
         const portalLink = `${siteUrl}/mi-solicitud?token=${accessToken}`;
         await fetch('https://api.resend.com/emails', {
           method: 'POST',

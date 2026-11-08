@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /mi-solicitud/
+Disallow: /mi-credito/
+Disallow: /api/
+
+Sitemap: https://rapimaxcr.com/sitemap.xml

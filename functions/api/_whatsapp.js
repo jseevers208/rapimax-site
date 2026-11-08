@@ -34,7 +34,7 @@ export async function sendStatusWhatsApp(env, phone, newStatus, applicantName, p
   const message = STATUS_MESSAGES[newStatus];
   if (!message) return;
 
-  const siteUrl = env.SITE_URL || 'https://rapimax-dev.com';
+  const siteUrl = env.SITE_URL || 'https://rapimaxcr.com';
   let text = `Hola ${applicantName || ''},\n\n${message}`;
   if (portalUrl) {
     text += `\n\n🔗 Consultá el estado de tu solicitud:\n${siteUrl}${portalUrl}`;

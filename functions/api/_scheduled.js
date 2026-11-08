@@ -11,7 +11,7 @@ export async function sendDailyDigest(env) {
   }
 
   const db = env.DB;
-  const siteUrl = env.SITE_URL || 'https://rapimax-dev.com';
+  const siteUrl = env.SITE_URL || 'https://rapimaxcr.com';
 
   // Today's stats
   const [newApps, newContacts, newLeads, statusChanges, newCases] = await Promise.all([
@@ -116,7 +116,7 @@ export async function sendWeeklyDigest(env) {
   if (!env.RESEND_API_KEY || !env.NOTIFICATION_EMAIL) return;
 
   const db = env.DB;
-  const siteUrl = env.SITE_URL || 'https://rapimax-dev.com';
+  const siteUrl = env.SITE_URL || 'https://rapimaxcr.com';
 
   const [weekApps, weekContacts, weekLeads, weekApproved, weekRejected, weekDesembolsadas, totalActive, waitlistCount] = await Promise.all([
     db.prepare("SELECT COUNT(*) as c FROM loan_applications WHERE created_at >= datetime('now', '-7 days')").first(),
